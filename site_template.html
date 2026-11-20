@@ -247,13 +247,15 @@ footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8p
   function filter() {
     var s = $("#fSys").value, t = $("#fType").value, o = $("#fOut").value, n = 0;
     rows.forEach(function (r) {
-      var show = (!s || r.dataset.sys === s) && (!t || r.dataset.type === t) && (o === "all" || r.dataset.ok === o);
+      var sysOk = !s || (s === "vendors" ? r.dataset.kind === "vendor" : r.dataset.sys === s);
+      var show = sysOk && (!t || r.dataset.type === t) && (o === "all" || r.dataset.ok === o);
       r.hidden = !show; if (show) n++;
     });
     $("#fCount").textContent = n + (n === 1 ? " row" : " rows");
   }
   ["#fSys", "#fType", "#fOut"].forEach(function (id) { $(id).addEventListener("change", filter); });
-  $("#fOut").value = "0"; filter();
+  // Default view: memory-system failures. Baseline failures are expected, so they start hidden.
+  $("#fSys").value = "vendors"; $("#fOut").value = "0"; filter();
 
   // Tooltips.
   var tip = $("#tip");

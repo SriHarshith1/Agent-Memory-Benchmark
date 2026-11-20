@@ -24,6 +24,8 @@ import re
 import time
 from collections import defaultdict
 
+import ollama
+
 from agent import UNKNOWN, answer
 from memory import make_system
 
@@ -113,7 +115,15 @@ def main():
     parser.add_argument("--runs", type=int, default=1)
     args = parser.parse_args()
 
-    users = [json.load(open(path)) for path in sorted(glob.glob(args.data))]
+    try:
+        ollama.list()
+    except ConnectionError:
+        raise SystemExit("Ollama is not running. Start it (open the Ollama app or run `ollama serve`), then run eval.py again.")
+
+    paths = sorted(glob.glob(args.data))
+    if not paths:
+        raise SystemExit(f"no user files match {args.data!r}")
+    users = [json.load(open(path)) for path in paths]
     print(f"{len(users)} users, {sum(len(u['questions']) for u in users)} questions, systems={args.systems}")
 
     all_rows = []

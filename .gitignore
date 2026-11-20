@@ -4,3 +4,4 @@ __pycache__/
 .mem0_qdrant/
 .graphiti_kuzu*
 results/
+.claude/

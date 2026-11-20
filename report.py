@@ -280,7 +280,7 @@ def explorer(rows, systems):
         else:
             lis = "".join(f"<li>{escape(m)}</li>" for m in mems[:15]) or "<li>(nothing returned)</li>"
             mem_html = f'<details><summary>{len(mems)} memories returned</summary><ul>{lis}</ul></details>'
-        items.append(f'''<div class="qrow" data-sys="{r["system"]}" data-type="{r["type"]}" data-ok="{int(r["correct"])}">
+        items.append(f'''<div class="qrow" data-sys="{r["system"]}" data-kind="{s.get("kind", "")}" data-type="{r["type"]}" data-ok="{int(r["correct"])}">
   <div class="qhead"><span class="verdict {"ok" if r["correct"] else "bad"}">{"✓ pass" if r["correct"] else "✗ fail"}</span>
     <span>{swatch(s)}{escape(s["name"])}</span><span>{escape(TYPES.get(r["type"], (r["type"],))[0])}</span>
     <span>user {escape(r["user_id"])} · run {r["run"]}</span>{'<span class="verdict bad">stale value</span>' if stale_hit else ""}</div>
@@ -289,7 +289,7 @@ def explorer(rows, systems):
   {mem_html}
 </div>''')
     return f'''<div class="toolbar">
-  <select id="fSys" aria-label="System"><option value="">All systems</option>{opts_sys}</select>
+  <select id="fSys" aria-label="System"><option value="">All systems</option><option value="vendors">Mem0 + Zep</option>{opts_sys}</select>
   <select id="fType" aria-label="Situation"><option value="">All situations</option>{opts_type}</select>
   <select id="fOut" aria-label="Outcome"><option value="all">All answers</option><option value="0">Failures only</option><option value="1">Passes only</option></select>
   <span class="count" id="fCount">{len(rows)} rows</span>
@@ -384,6 +384,9 @@ def main():
     files = args.files or sorted(glob.glob("results/*.jsonl"))[-1:]
     if not files:
         raise SystemExit("no results/*.jsonl found - run eval.py first")
+    missing = [f for f in files if not os.path.isfile(f)]
+    if missing:
+        raise SystemExit(f"results file not found: {', '.join(missing)}")
     rows = [json.loads(line) for f in files for line in open(f) if line.strip()]
 
     template = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "site_template.html")).read()
