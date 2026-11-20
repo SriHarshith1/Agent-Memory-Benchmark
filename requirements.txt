@@ -1,0 +1,3 @@
+ollama
+mem0ai
+graphiti-core[kuzu]

@@ -1,0 +1,436 @@
+{
+  "user_id": "g004",
+  "facts": {
+    "pet": "Oscar",
+    "kind": "beagle",
+    "city": "Delhi",
+    "old_city": "Delhi",
+    "new_city": "Ahmedabad",
+    "sib": "Latha",
+    "rel": "sister",
+    "sib_city": "Kolkata",
+    "company": "Infosys",
+    "new_company": "Zoho",
+    "email": "aditya@infosys.com"
+  },
+  "fact_sessions": {
+    "intro": "s1",
+    "sibling": "s3",
+    "move": "s9",
+    "forget": "s13"
+  },
+  "sessions": [
+    {
+      "session_id": "s1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hey! Quick intro: I live in Delhi and I just got a beagle named Oscar."
+        },
+        {
+          "role": "assistant",
+          "content": "Nice to meet you! Oscar sounds adorable."
+        },
+        {
+          "role": "user",
+          "content": "For work stuff, my email is aditya@infosys.com, I work at Infosys."
+        },
+        {
+          "role": "assistant",
+          "content": "Got it, I'll keep that in mind."
+        },
+        {
+          "role": "user",
+          "content": "Oscar chewed my headphones again."
+        },
+        {
+          "role": "assistant",
+          "content": "Classic pet behavior!"
+        }
+      ]
+    },
+    {
+      "session_id": "s2",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What's a quick dinner I can make in 15 minutes?"
+        },
+        {
+          "role": "assistant",
+          "content": "A vegetable stir fry with rice is fast and easy."
+        }
+      ]
+    },
+    {
+      "session_id": "s3",
+      "messages": [
+        {
+          "role": "user",
+          "content": "My sister Latha lives in Kolkata. We talk every weekend."
+        },
+        {
+          "role": "assistant",
+          "content": "That's lovely, staying close matters."
+        },
+        {
+          "role": "user",
+          "content": "Thinking of starting to run in the mornings."
+        },
+        {
+          "role": "assistant",
+          "content": "Great idea, start slow and build up."
+        }
+      ]
+    },
+    {
+      "session_id": "s4",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Watched a documentary about Bangalore's old architecture."
+        },
+        {
+          "role": "assistant",
+          "content": "That sounds interesting!"
+        }
+      ]
+    },
+    {
+      "session_id": "s5",
+      "messages": [
+        {
+          "role": "user",
+          "content": "How do I make my coffee less bitter?"
+        },
+        {
+          "role": "assistant",
+          "content": "Use slightly cooler water and a coarser grind."
+        },
+        {
+          "role": "user",
+          "content": "What's a quick dinner I can make in 15 minutes?"
+        },
+        {
+          "role": "assistant",
+          "content": "A vegetable stir fry with rice is fast and easy."
+        }
+      ]
+    },
+    {
+      "session_id": "s6",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I saw a cricket match highlight from Hyderabad today."
+        },
+        {
+          "role": "assistant",
+          "content": "Cricket highlights are always fun to watch."
+        }
+      ]
+    },
+    {
+      "session_id": "s7",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Can you recommend a good book for a long flight?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try 'Project Hail Mary', it's a fun read."
+        },
+        {
+          "role": "user",
+          "content": "Any tips for sleeping better?"
+        },
+        {
+          "role": "assistant",
+          "content": "Keep a fixed schedule and avoid screens before bed."
+        }
+      ]
+    },
+    {
+      "session_id": "s8",
+      "messages": [
+        {
+          "role": "user",
+          "content": "My laptop keeps freezing, any tips?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try closing background apps and checking for updates."
+        },
+        {
+          "role": "user",
+          "content": "Oscar chewed my headphones again."
+        },
+        {
+          "role": "assistant",
+          "content": "Classic pet behavior!"
+        }
+      ]
+    },
+    {
+      "session_id": "s9",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I finally relocated to Ahmedabad. Left Delhi last week, joining Zoho on Monday."
+        },
+        {
+          "role": "assistant",
+          "content": "That's a big change, good luck at Zoho!"
+        },
+        {
+          "role": "user",
+          "content": "I saw a cricket match highlight from Kochi today."
+        },
+        {
+          "role": "assistant",
+          "content": "Cricket highlights are always fun to watch."
+        },
+        {
+          "role": "user",
+          "content": "Any tips for sleeping better?"
+        },
+        {
+          "role": "assistant",
+          "content": "Keep a fixed schedule and avoid screens before bed."
+        }
+      ]
+    },
+    {
+      "session_id": "s10",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Watched a documentary about Kochi's old architecture."
+        },
+        {
+          "role": "assistant",
+          "content": "That sounds interesting!"
+        }
+      ]
+    },
+    {
+      "session_id": "s11",
+      "messages": [
+        {
+          "role": "user",
+          "content": "My laptop keeps freezing, any tips?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try closing background apps and checking for updates."
+        },
+        {
+          "role": "user",
+          "content": "It's raining like crazy today lol."
+        },
+        {
+          "role": "assistant",
+          "content": "Stay dry!"
+        }
+      ]
+    },
+    {
+      "session_id": "s12",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Watched a documentary about Pune's old architecture."
+        },
+        {
+          "role": "assistant",
+          "content": "That sounds interesting!"
+        },
+        {
+          "role": "user",
+          "content": "My laptop keeps freezing, any tips?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try closing background apps and checking for updates."
+        }
+      ]
+    },
+    {
+      "session_id": "s13",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Can you delete the work email I gave you earlier? It's not valid anymore."
+        },
+        {
+          "role": "assistant",
+          "content": "Done, I've removed your old work email."
+        },
+        {
+          "role": "user",
+          "content": "Can you recommend a good book for a long flight?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try 'Project Hail Mary', it's a fun read."
+        }
+      ]
+    },
+    {
+      "session_id": "s14",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Oscar chewed my headphones again."
+        },
+        {
+          "role": "assistant",
+          "content": "Classic pet behavior!"
+        },
+        {
+          "role": "user",
+          "content": "Thinking of starting to run in the mornings."
+        },
+        {
+          "role": "assistant",
+          "content": "Great idea, start slow and build up."
+        }
+      ]
+    },
+    {
+      "session_id": "s15",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What's a good way to learn to cook?"
+        },
+        {
+          "role": "assistant",
+          "content": "Start with 5 simple recipes and repeat them."
+        },
+        {
+          "role": "user",
+          "content": "What's a quick dinner I can make in 15 minutes?"
+        },
+        {
+          "role": "assistant",
+          "content": "A vegetable stir fry with rice is fast and easy."
+        }
+      ]
+    },
+    {
+      "session_id": "s16",
+      "messages": [
+        {
+          "role": "user",
+          "content": "My laptop keeps freezing, any tips?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try closing background apps and checking for updates."
+        },
+        {
+          "role": "user",
+          "content": "Thinking of starting to run in the mornings."
+        },
+        {
+          "role": "assistant",
+          "content": "Great idea, start slow and build up."
+        }
+      ]
+    },
+    {
+      "session_id": "s17",
+      "messages": [
+        {
+          "role": "user",
+          "content": "My laptop keeps freezing, any tips?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try closing background apps and checking for updates."
+        }
+      ]
+    },
+    {
+      "session_id": "s18",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What's a good way to learn to cook?"
+        },
+        {
+          "role": "assistant",
+          "content": "Start with 5 simple recipes and repeat them."
+        }
+      ]
+    },
+    {
+      "session_id": "s19",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What's a quick dinner I can make in 15 minutes?"
+        },
+        {
+          "role": "assistant",
+          "content": "A vegetable stir fry with rice is fast and easy."
+        }
+      ]
+    },
+    {
+      "session_id": "s20",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Watched a documentary about Hyderabad's old architecture."
+        },
+        {
+          "role": "assistant",
+          "content": "That sounds interesting!"
+        }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "question": "What's my pet's name?",
+      "type": "plain_recall",
+      "answer": "Oscar"
+    },
+    {
+      "question": "What's my sister's name?",
+      "type": "plain_recall",
+      "answer": "Latha"
+    },
+    {
+      "question": "What city do I live in?",
+      "type": "updated_fact",
+      "answer": "Ahmedabad",
+      "stale_answer": "Delhi"
+    },
+    {
+      "question": "Where did I live before?",
+      "type": "previous_value",
+      "answer": "Delhi"
+    },
+    {
+      "question": "What was my old work email?",
+      "type": "deleted_fact",
+      "answer": "UNKNOWN",
+      "stale_answer": "aditya@infosys.com"
+    },
+    {
+      "question": "What did I study in college?",
+      "type": "never_mentioned",
+      "answer": "UNKNOWN"
+    },
+    {
+      "question": "Where does my sister live?",
+      "type": "other_person",
+      "answer": "Kolkata",
+      "distractor": "Ahmedabad"
+    }
+  ]
+}

@@ -1,0 +1,460 @@
+{
+  "user_id": "g005",
+  "facts": {
+    "pet": "Simba",
+    "kind": "beagle",
+    "city": "Bangalore",
+    "old_city": "Bangalore",
+    "new_city": "Hyderabad",
+    "sib": "Arun",
+    "rel": "brother",
+    "sib_city": "Pune",
+    "company": "Cred",
+    "new_company": "Ola",
+    "email": "siddharth@cred.com"
+  },
+  "fact_sessions": {
+    "intro": "s1",
+    "sibling": "s4",
+    "move": "s5",
+    "forget": "s17"
+  },
+  "sessions": [
+    {
+      "session_id": "s1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hello! I recently adopted a beagle, his name is Simba. I'm in Bangalore by the way."
+        },
+        {
+          "role": "assistant",
+          "content": "Congrats on adopting Simba!"
+        },
+        {
+          "role": "user",
+          "content": "My work email is siddharth@cred.com if you need it. I'm at Cred right now."
+        },
+        {
+          "role": "assistant",
+          "content": "Thanks, noted."
+        },
+        {
+          "role": "user",
+          "content": "Thinking of starting to run in the mornings."
+        },
+        {
+          "role": "assistant",
+          "content": "Great idea, start slow and build up."
+        },
+        {
+          "role": "user",
+          "content": "Can you recommend a good book for a long flight?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try 'Project Hail Mary', it's a fun read."
+        }
+      ]
+    },
+    {
+      "session_id": "s2",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Can you recommend a good book for a long flight?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try 'Project Hail Mary', it's a fun read."
+        }
+      ]
+    },
+    {
+      "session_id": "s3",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Thinking of starting to run in the mornings."
+        },
+        {
+          "role": "assistant",
+          "content": "Great idea, start slow and build up."
+        },
+        {
+          "role": "user",
+          "content": "What's a good way to learn to cook?"
+        },
+        {
+          "role": "assistant",
+          "content": "Start with 5 simple recipes and repeat them."
+        }
+      ]
+    },
+    {
+      "session_id": "s4",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Planning to visit my brother Arun in Pune next month."
+        },
+        {
+          "role": "assistant",
+          "content": "Sounds like a great trip."
+        },
+        {
+          "role": "user",
+          "content": "What's a quick dinner I can make in 15 minutes?"
+        },
+        {
+          "role": "assistant",
+          "content": "A vegetable stir fry with rice is fast and easy."
+        }
+      ]
+    },
+    {
+      "session_id": "s5",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Big news: I moved from Bangalore to Hyderabad! Starting a new job at Ola."
+        },
+        {
+          "role": "assistant",
+          "content": "Congratulations on the move and the new job!"
+        },
+        {
+          "role": "user",
+          "content": "What's a quick dinner I can make in 15 minutes?"
+        },
+        {
+          "role": "assistant",
+          "content": "A vegetable stir fry with rice is fast and easy."
+        }
+      ]
+    },
+    {
+      "session_id": "s6",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Thinking of starting to run in the mornings."
+        },
+        {
+          "role": "assistant",
+          "content": "Great idea, start slow and build up."
+        },
+        {
+          "role": "user",
+          "content": "I saw a cricket match highlight from Hyderabad today."
+        },
+        {
+          "role": "assistant",
+          "content": "Cricket highlights are always fun to watch."
+        }
+      ]
+    },
+    {
+      "session_id": "s7",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What's a good way to learn to cook?"
+        },
+        {
+          "role": "assistant",
+          "content": "Start with 5 simple recipes and repeat them."
+        },
+        {
+          "role": "user",
+          "content": "Thinking of starting to run in the mornings."
+        },
+        {
+          "role": "assistant",
+          "content": "Great idea, start slow and build up."
+        }
+      ]
+    },
+    {
+      "session_id": "s8",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Any tips for sleeping better?"
+        },
+        {
+          "role": "assistant",
+          "content": "Keep a fixed schedule and avoid screens before bed."
+        }
+      ]
+    },
+    {
+      "session_id": "s9",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Can you recommend a good book for a long flight?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try 'Project Hail Mary', it's a fun read."
+        }
+      ]
+    },
+    {
+      "session_id": "s10",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Thinking of starting to run in the mornings."
+        },
+        {
+          "role": "assistant",
+          "content": "Great idea, start slow and build up."
+        },
+        {
+          "role": "user",
+          "content": "Can you recommend a good book for a long flight?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try 'Project Hail Mary', it's a fun read."
+        }
+      ]
+    },
+    {
+      "session_id": "s11",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Thinking of starting to run in the mornings."
+        },
+        {
+          "role": "assistant",
+          "content": "Great idea, start slow and build up."
+        },
+        {
+          "role": "user",
+          "content": "Can you recommend a good book for a long flight?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try 'Project Hail Mary', it's a fun read."
+        }
+      ]
+    },
+    {
+      "session_id": "s12",
+      "messages": [
+        {
+          "role": "user",
+          "content": "It's raining like crazy today lol."
+        },
+        {
+          "role": "assistant",
+          "content": "Stay dry!"
+        },
+        {
+          "role": "user",
+          "content": "Can you recommend a good book for a long flight?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try 'Project Hail Mary', it's a fun read."
+        }
+      ]
+    },
+    {
+      "session_id": "s13",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Any tips for sleeping better?"
+        },
+        {
+          "role": "assistant",
+          "content": "Keep a fixed schedule and avoid screens before bed."
+        },
+        {
+          "role": "user",
+          "content": "Simba chewed my headphones again."
+        },
+        {
+          "role": "assistant",
+          "content": "Classic pet behavior!"
+        }
+      ]
+    },
+    {
+      "session_id": "s14",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Can you recommend a good book for a long flight?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try 'Project Hail Mary', it's a fun read."
+        },
+        {
+          "role": "user",
+          "content": "Thinking of starting to run in the mornings."
+        },
+        {
+          "role": "assistant",
+          "content": "Great idea, start slow and build up."
+        }
+      ]
+    },
+    {
+      "session_id": "s15",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I read an article about traffic in Delhi, it sounds awful."
+        },
+        {
+          "role": "assistant",
+          "content": "City traffic can be really tough."
+        }
+      ]
+    },
+    {
+      "session_id": "s16",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Simba chewed my headphones again."
+        },
+        {
+          "role": "assistant",
+          "content": "Classic pet behavior!"
+        },
+        {
+          "role": "user",
+          "content": "How do I make my coffee less bitter?"
+        },
+        {
+          "role": "assistant",
+          "content": "Use slightly cooler water and a coarser grind."
+        }
+      ]
+    },
+    {
+      "session_id": "s17",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Can you delete the work email I gave you earlier? It's not valid anymore."
+        },
+        {
+          "role": "assistant",
+          "content": "Done, I've removed your old work email."
+        },
+        {
+          "role": "user",
+          "content": "My laptop keeps freezing, any tips?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try closing background apps and checking for updates."
+        },
+        {
+          "role": "user",
+          "content": "Can you recommend a good book for a long flight?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try 'Project Hail Mary', it's a fun read."
+        }
+      ]
+    },
+    {
+      "session_id": "s18",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Any tips for sleeping better?"
+        },
+        {
+          "role": "assistant",
+          "content": "Keep a fixed schedule and avoid screens before bed."
+        }
+      ]
+    },
+    {
+      "session_id": "s19",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What's a quick dinner I can make in 15 minutes?"
+        },
+        {
+          "role": "assistant",
+          "content": "A vegetable stir fry with rice is fast and easy."
+        }
+      ]
+    },
+    {
+      "session_id": "s20",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What's a good way to learn to cook?"
+        },
+        {
+          "role": "assistant",
+          "content": "Start with 5 simple recipes and repeat them."
+        },
+        {
+          "role": "user",
+          "content": "Thinking of starting to run in the mornings."
+        },
+        {
+          "role": "assistant",
+          "content": "Great idea, start slow and build up."
+        }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "question": "What's my pet's name?",
+      "type": "plain_recall",
+      "answer": "Simba"
+    },
+    {
+      "question": "What is my brother called?",
+      "type": "plain_recall",
+      "answer": "Arun"
+    },
+    {
+      "question": "What city do I live in?",
+      "type": "updated_fact",
+      "answer": "Hyderabad",
+      "stale_answer": "Bangalore"
+    },
+    {
+      "question": "Which city did I live in before I moved?",
+      "type": "previous_value",
+      "answer": "Bangalore"
+    },
+    {
+      "question": "What's my work email?",
+      "type": "deleted_fact",
+      "answer": "UNKNOWN",
+      "stale_answer": "siddharth@cred.com"
+    },
+    {
+      "question": "What's my favorite football team?",
+      "type": "never_mentioned",
+      "answer": "UNKNOWN"
+    },
+    {
+      "question": "Which city does my brother live in?",
+      "type": "other_person",
+      "answer": "Pune",
+      "distractor": "Hyderabad"
+    }
+  ]
+}

@@ -1,0 +1,452 @@
+{
+  "user_id": "g009",
+  "facts": {
+    "pet": "Bruno",
+    "kind": "cat",
+    "city": "Ahmedabad",
+    "old_city": "Ahmedabad",
+    "new_city": "Kolkata",
+    "sib": "Manoj",
+    "rel": "brother",
+    "sib_city": "Jaipur",
+    "company": "Zoho",
+    "new_company": "Infosys",
+    "email": "ananya@zoho.com"
+  },
+  "fact_sessions": {
+    "intro": "s1",
+    "sibling": "s4",
+    "move": "s13",
+    "forget": "s16"
+  },
+  "sessions": [
+    {
+      "session_id": "s1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Can you recommend a good book for a long flight?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try 'Project Hail Mary', it's a fun read."
+        },
+        {
+          "role": "user",
+          "content": "What's a quick dinner I can make in 15 minutes?"
+        },
+        {
+          "role": "assistant",
+          "content": "A vegetable stir fry with rice is fast and easy."
+        },
+        {
+          "role": "user",
+          "content": "Hi, I'm new here. I'm based in Ahmedabad. Oh and my cat Bruno says hi."
+        },
+        {
+          "role": "assistant",
+          "content": "Hello! Say hi to Bruno from me."
+        },
+        {
+          "role": "user",
+          "content": "My work email is ananya@zoho.com if you need it. I'm at Zoho right now."
+        },
+        {
+          "role": "assistant",
+          "content": "Thanks, noted."
+        }
+      ]
+    },
+    {
+      "session_id": "s2",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What's a quick dinner I can make in 15 minutes?"
+        },
+        {
+          "role": "assistant",
+          "content": "A vegetable stir fry with rice is fast and easy."
+        },
+        {
+          "role": "user",
+          "content": "My laptop keeps freezing, any tips?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try closing background apps and checking for updates."
+        }
+      ]
+    },
+    {
+      "session_id": "s3",
+      "messages": [
+        {
+          "role": "user",
+          "content": "My laptop keeps freezing, any tips?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try closing background apps and checking for updates."
+        }
+      ]
+    },
+    {
+      "session_id": "s4",
+      "messages": [
+        {
+          "role": "user",
+          "content": "My brother Manoj lives in Jaipur. We talk every weekend."
+        },
+        {
+          "role": "assistant",
+          "content": "That's lovely, staying close matters."
+        },
+        {
+          "role": "user",
+          "content": "I read an article about traffic in Pune, it sounds awful."
+        },
+        {
+          "role": "assistant",
+          "content": "City traffic can be really tough."
+        }
+      ]
+    },
+    {
+      "session_id": "s5",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I read an article about traffic in Kochi, it sounds awful."
+        },
+        {
+          "role": "assistant",
+          "content": "City traffic can be really tough."
+        }
+      ]
+    },
+    {
+      "session_id": "s6",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Bruno chewed my headphones again."
+        },
+        {
+          "role": "assistant",
+          "content": "Classic pet behavior!"
+        },
+        {
+          "role": "user",
+          "content": "My laptop keeps freezing, any tips?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try closing background apps and checking for updates."
+        }
+      ]
+    },
+    {
+      "session_id": "s7",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Watched a documentary about Hyderabad's old architecture."
+        },
+        {
+          "role": "assistant",
+          "content": "That sounds interesting!"
+        },
+        {
+          "role": "user",
+          "content": "I saw a cricket match highlight from Jaipur today."
+        },
+        {
+          "role": "assistant",
+          "content": "Cricket highlights are always fun to watch."
+        }
+      ]
+    },
+    {
+      "session_id": "s8",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Thinking of starting to run in the mornings."
+        },
+        {
+          "role": "assistant",
+          "content": "Great idea, start slow and build up."
+        },
+        {
+          "role": "user",
+          "content": "It's raining like crazy today lol."
+        },
+        {
+          "role": "assistant",
+          "content": "Stay dry!"
+        }
+      ]
+    },
+    {
+      "session_id": "s9",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I saw a cricket match highlight from Ahmedabad today."
+        },
+        {
+          "role": "assistant",
+          "content": "Cricket highlights are always fun to watch."
+        }
+      ]
+    },
+    {
+      "session_id": "s10",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Thinking of starting to run in the mornings."
+        },
+        {
+          "role": "assistant",
+          "content": "Great idea, start slow and build up."
+        }
+      ]
+    },
+    {
+      "session_id": "s11",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Any tips for sleeping better?"
+        },
+        {
+          "role": "assistant",
+          "content": "Keep a fixed schedule and avoid screens before bed."
+        },
+        {
+          "role": "user",
+          "content": "I read an article about traffic in Bangalore, it sounds awful."
+        },
+        {
+          "role": "assistant",
+          "content": "City traffic can be really tough."
+        }
+      ]
+    },
+    {
+      "session_id": "s12",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Any tips for sleeping better?"
+        },
+        {
+          "role": "assistant",
+          "content": "Keep a fixed schedule and avoid screens before bed."
+        }
+      ]
+    },
+    {
+      "session_id": "s13",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Thinking of starting to run in the mornings."
+        },
+        {
+          "role": "assistant",
+          "content": "Great idea, start slow and build up."
+        },
+        {
+          "role": "user",
+          "content": "I finally relocated to Kolkata. Left Ahmedabad last week, joining Infosys on Monday."
+        },
+        {
+          "role": "assistant",
+          "content": "That's a big change, good luck at Infosys!"
+        },
+        {
+          "role": "user",
+          "content": "Any tips for sleeping better?"
+        },
+        {
+          "role": "assistant",
+          "content": "Keep a fixed schedule and avoid screens before bed."
+        }
+      ]
+    },
+    {
+      "session_id": "s14",
+      "messages": [
+        {
+          "role": "user",
+          "content": "My laptop keeps freezing, any tips?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try closing background apps and checking for updates."
+        },
+        {
+          "role": "user",
+          "content": "Bruno chewed my headphones again."
+        },
+        {
+          "role": "assistant",
+          "content": "Classic pet behavior!"
+        }
+      ]
+    },
+    {
+      "session_id": "s15",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Any tips for sleeping better?"
+        },
+        {
+          "role": "assistant",
+          "content": "Keep a fixed schedule and avoid screens before bed."
+        }
+      ]
+    },
+    {
+      "session_id": "s16",
+      "messages": [
+        {
+          "role": "user",
+          "content": "My laptop keeps freezing, any tips?"
+        },
+        {
+          "role": "assistant",
+          "content": "Try closing background apps and checking for updates."
+        },
+        {
+          "role": "user",
+          "content": "Can you delete the work email I gave you earlier? It's not valid anymore."
+        },
+        {
+          "role": "assistant",
+          "content": "Done, I've removed your old work email."
+        }
+      ]
+    },
+    {
+      "session_id": "s17",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I read an article about traffic in Bangalore, it sounds awful."
+        },
+        {
+          "role": "assistant",
+          "content": "City traffic can be really tough."
+        },
+        {
+          "role": "user",
+          "content": "I saw a cricket match highlight from Jaipur today."
+        },
+        {
+          "role": "assistant",
+          "content": "Cricket highlights are always fun to watch."
+        }
+      ]
+    },
+    {
+      "session_id": "s18",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I read an article about traffic in Jaipur, it sounds awful."
+        },
+        {
+          "role": "assistant",
+          "content": "City traffic can be really tough."
+        },
+        {
+          "role": "user",
+          "content": "Bruno chewed my headphones again."
+        },
+        {
+          "role": "assistant",
+          "content": "Classic pet behavior!"
+        }
+      ]
+    },
+    {
+      "session_id": "s19",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Watched a documentary about Mumbai's old architecture."
+        },
+        {
+          "role": "assistant",
+          "content": "That sounds interesting!"
+        },
+        {
+          "role": "user",
+          "content": "I read an article about traffic in Kochi, it sounds awful."
+        },
+        {
+          "role": "assistant",
+          "content": "City traffic can be really tough."
+        }
+      ]
+    },
+    {
+      "session_id": "s20",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I read an article about traffic in Bangalore, it sounds awful."
+        },
+        {
+          "role": "assistant",
+          "content": "City traffic can be really tough."
+        }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "question": "What did I name my cat?",
+      "type": "plain_recall",
+      "answer": "Bruno"
+    },
+    {
+      "question": "What's my brother's name?",
+      "type": "plain_recall",
+      "answer": "Manoj"
+    },
+    {
+      "question": "What city do I live in?",
+      "type": "updated_fact",
+      "answer": "Kolkata",
+      "stale_answer": "Ahmedabad"
+    },
+    {
+      "question": "Where did I live before?",
+      "type": "previous_value",
+      "answer": "Ahmedabad"
+    },
+    {
+      "question": "What was my old work email?",
+      "type": "deleted_fact",
+      "answer": "UNKNOWN",
+      "stale_answer": "ananya@zoho.com"
+    },
+    {
+      "question": "What's my mother's name?",
+      "type": "never_mentioned",
+      "answer": "UNKNOWN"
+    },
+    {
+      "question": "Where does my brother live?",
+      "type": "other_person",
+      "answer": "Jaipur",
+      "distractor": "Kolkata"
+    }
+  ]
+}

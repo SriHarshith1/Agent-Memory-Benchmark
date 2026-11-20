@@ -1,0 +1,1081 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Memory Benchmark</title>
+<meta name="description" content="Independent benchmark of long-term memory for AI agents: Mem0 and Zep (Graphiti) against two baselines, scored by exact match with no LLM judge.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  // Set the theme before the page draws, so there is no flash. Works without storage.
+  (function () { try { var t = localStorage.getItem("mb-theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {} })();
+</script>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f6f2; --bg-2: #fcfbf8; --grid: #ece9e1; --dots: #d9d5ca;
+  --text: #16150f; --text-dim: #56544c; --text-faint: #86837a;
+  --line: #e4e1d8; --line-strong: #cfcbbf; --accent: #8a5a24; --accent-soft: #8a5a241a;
+  --ok: #2c6e35; --bad: #b3261e;
+  --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #6250d6;
+  --serif: "STIX Two Text", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0d0d0d; --bg-2: #141414; --grid: #191919; --dots: #2a2a2a;
+    --text: #ededed; --text-dim: #a8a7a2; --text-faint: #7c7b76;
+    --line: #262626; --line-strong: #3a3a3a; --accent: #d4a56a; --accent-soft: #d4a56a1f;
+    --ok: #7fbf86; --bad: #e0756a;
+    --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #9085e9;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d0d0d; --bg-2: #141414; --grid: #191919; --dots: #2a2a2a;
+  --text: #ededed; --text-dim: #a8a7a2; --text-faint: #7c7b76;
+  --line: #262626; --line-strong: #3a3a3a; --accent: #d4a56a; --accent-soft: #d4a56a1f;
+  --ok: #7fbf86; --bad: #e0756a;
+  --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #9085e9;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; color: var(--text); font: 16px/1.6 var(--serif);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 96px 96px;
+}
+a { color: inherit; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
+a:hover { text-decoration-color: var(--text); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code { font: 0.86em var(--mono); }
+.shell { max-width: 1240px; margin: 0 auto; padding: 24px 16px 80px; }
+
+/* top bar */
+.top { display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--line); background: var(--bg-2); padding: 12px 18px; }
+.mark { font: 500 13px var(--mono); letter-spacing: .02em; }
+.mark i { display: inline-block; width: 9px; height: 9px; background: var(--accent); margin-right: 8px; vertical-align: 0; }
+.theme-btn { font: 12px var(--mono); color: var(--text-dim); background: none; border: 1px solid var(--line-strong); padding: 4px 10px; cursor: pointer; }
+.theme-btn:hover { color: var(--text); border-color: var(--text-dim); }
+
+/* hero */
+.crumb { margin: 26px 0 14px; font: 13px var(--mono); color: var(--text-dim); }
+.crumb b { color: var(--text); font-weight: 500; }
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 56px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); background: var(--bg-2); padding: 5px 10px; font: 12px var(--mono); color: var(--text-dim); }
+.sq { display: inline-block; width: 8px; height: 8px; background: var(--accent); flex: none; }
+h1 { font-weight: 400; font-size: clamp(36px, 5vw, 48px); line-height: 1.1; letter-spacing: -0.015em; margin: 14px 0 14px; }
+.hero-main p { margin: 0 0 14px; color: var(--text-dim); }
+.hero-main p b, .hero-side b { color: var(--text); font-weight: 600; }
+.hero-side { font-size: 14.5px; color: var(--text-dim); padding-top: 4px; }
+.hero-side ul { padding-left: 16px; margin: 10px 0 18px; }
+.hero-side li { margin-bottom: 10px; }
+.hero-side .small { font: 12px/1.6 var(--mono); }
+
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line-strong); margin-top: 36px; max-width: 820px; background: var(--bg-2); }
+.card { padding: 18px 20px 22px; text-decoration: none; display: flex; flex-direction: column; gap: 6px; }
+.card + .card { border-left: 1px solid var(--line-strong); }
+.card:hover { background: var(--accent-soft); }
+.card .idx { font: 11px var(--mono); color: var(--text-faint); }
+.card b { font-weight: 400; font-size: 18px; }
+.card span:last-child { font-size: 13.5px; color: var(--text-dim); }
+
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 220px)); border-top: 1px solid var(--line); margin-top: 22px; }
+.stat { padding: 14px 16px; border: 1px solid var(--line); border-top: 0; background: var(--bg-2); }
+.stat + .stat { border-left: 0; }
+.eyebrow { font: 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text-faint); }
+.stat b { display: block; font: 15px var(--mono); color: var(--accent); margin-top: 4px; font-weight: 400; }
+
+.vendors { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-top: 18px; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.vendor { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; padding: 12px 16px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--bg-2); font-size: 14.5px; }
+.vendor small { grid-column: 2; font: 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text-faint); }
+.sw { display: inline-block; width: 10px; height: 10px; flex: none; margin-top: 6px; }
+.sys .sw, .qhead .sw, .winners .sw { margin: 0 8px 0 0; vertical-align: 0; }
+.c1 { background: var(--c1); } .c2 { background: var(--c2); } .c3 { background: var(--c3); } .c4 { background: var(--c4); } .c5 { background: var(--c5); }
+
+/* sections */
+section { margin-top: 56px; padding-top: 28px; border-top: 1px solid var(--line-strong); }
+.eyebrow-line { font: 12px var(--mono); letter-spacing: .08em; color: var(--text-dim); }
+.eyebrow-line .idx { color: var(--text-faint); margin-right: 6px; }
+h2 { font-weight: 400; font-size: 30px; margin: 6px 0 8px; letter-spacing: -0.01em; }
+.desc { max-width: 880px; color: var(--text-dim); font-size: 15px; margin: 0 0 18px; }
+
+.issue { max-width: 620px; border-top: 1px solid var(--bad); border-bottom: 1px solid var(--line-strong); padding: 16px 0 14px; margin: 22px 0 22px; }
+.issue-tag { display: flex; align-items: center; gap: 8px; font: 12px var(--mono); letter-spacing: .06em; color: var(--bad); }
+.issue-tag .sq { background: var(--bad); }
+.issue p { margin: 8px 0 0; }
+.issue .note { font-style: italic; color: var(--text-dim); font-size: 14.5px; }
+
+.winners { list-style: none; padding: 0; margin: 0 0 22px; }
+.winners li { border-left: 2px solid var(--line-strong); padding: 3px 0 3px 12px; margin: 6px 0; font-size: 19px; }
+
+.bar-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 18px; }
+.seg { display: inline-flex; }
+.seg button { font: 11px var(--mono); letter-spacing: .06em; padding: 5px 12px; background: var(--bg-2); color: var(--text-faint); border: 1px solid var(--line-strong); cursor: pointer; }
+.seg button + button { border-left: 0; }
+.seg button[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); border-color: var(--accent); }
+.seg button[aria-pressed="true"] + button { border-left: 1px solid var(--line-strong); }
+
+/* charts */
+.charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.chart { margin: 0; border: 1px solid var(--line-strong); background: var(--bg-2); padding: 18px 18px 14px; }
+.chart figcaption { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; margin-bottom: 14px; }
+.chart figcaption b { font-weight: 600; font-size: 15px; }
+.chart figcaption span { grid-column: 2; font: 11.5px var(--mono); color: var(--text-faint); }
+.plot { display: flex; gap: 12px; height: 270px; padding: 0 6px;
+  background-image: radial-gradient(var(--dots) 1px, transparent 1.2px); background-size: 12px 12px; }
+.col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.bar-area { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; border-bottom: 1px solid var(--text-faint); }
+.val { font: 12px var(--mono); color: var(--text); margin-bottom: 4px; white-space: nowrap; }
+.bar { width: min(64px, 70%); border-radius: 0; min-height: 2px; }
+.col:hover .bar { outline: 2px solid var(--text); outline-offset: 1px; }
+.who { display: grid; justify-items: center; text-align: center; padding-top: 8px; font-size: 13px; line-height: 1.3; }
+.who .sw { margin: 0 0 4px; }
+.who b { font-weight: 600; }
+.who small { font: 10.5px var(--mono); color: var(--text-faint); }
+
+/* tables */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line-strong); background: var(--bg-2); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+caption { caption-side: bottom; text-align: left; padding: 10px 14px; font-size: 13px; color: var(--text-faint); border-top: 1px solid var(--line); }
+th { font: 500 10.5px var(--mono); text-transform: uppercase; letter-spacing: .07em; color: var(--text-faint); text-align: right; padding: 11px 14px; border-bottom: 1px solid var(--line-strong); white-space: nowrap; }
+th:first-child, th.l { text-align: left; }
+td { padding: 11px 14px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.sys { text-align: left; white-space: nowrap; font-size: 15px; }
+td.cfg { text-align: left; font: 11.5px/1.5 var(--mono); color: var(--text-faint); min-width: 240px; max-width: 320px; }
+td.num { font: 13px var(--mono); white-space: nowrap; }
+td.best { color: var(--text); font-weight: 500; }
+td.best::after { content: " ▲"; font-size: 9px; color: var(--accent); }
+.sd { color: var(--text-faint); font-size: 11px; }
+.tag { font: 10px var(--mono); text-transform: uppercase; letter-spacing: .08em; border: 1px solid var(--line-strong); padding: 0 5px; margin-left: 8px; color: var(--text-faint); vertical-align: 1px; }
+.heat td.cell { text-align: center; font: 13px var(--mono); min-width: 100px; background: color-mix(in oklab, var(--accent) var(--a, 0%), transparent); }
+.heat td.cell small { display: block; font-size: 10.5px; color: var(--text-faint); }
+.heat th { text-align: center; } .heat th:first-child { text-align: left; }
+
+.boxed { display: flex; align-items: center; gap: 14px; border: 1px solid var(--line-strong); background: var(--bg-2); padding: 12px 14px; margin-top: 22px; max-width: 880px; font-size: 14.5px; color: var(--text-dim); }
+.tag2 { font: 11px var(--mono); letter-spacing: .06em; color: var(--accent); border: 1px solid var(--accent); padding: 2px 7px; white-space: nowrap; }
+
+details.acc { border: 1px solid var(--line-strong); background: var(--bg-2); margin-top: -1px; }
+section > details.acc { margin-top: 18px; }
+details.acc > summary { list-style: none; cursor: pointer; padding: 16px 20px; font: 13.5px var(--mono); display: flex; gap: 10px; }
+details.acc > summary span { color: var(--text-faint); }
+details.acc > summary::-webkit-details-marker { display: none; }
+details.acc > summary::after { content: "+"; margin-left: auto; color: var(--text-faint); }
+details.acc[open] > summary::after { content: "−"; }
+details.acc > div { padding: 0 20px 18px; max-width: 860px; color: var(--text-dim); font-size: 15px; }
+details.acc h3 { color: var(--text); font-size: 16px; margin: 12px 0 4px; }
+details.acc li { margin: 4px 0; }
+details.acc b { color: var(--text); }
+
+/* explorer */
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+select { font: 12px var(--mono); color: var(--text); background: var(--bg-2); border: 1px solid var(--line-strong); padding: 6px 8px; border-radius: 0; }
+.count { font: 12px var(--mono); color: var(--text-faint); }
+.qlist { border: 1px solid var(--line-strong); background: var(--bg-2); max-height: 720px; overflow-y: auto; }
+.qrow { padding: 13px 16px; border-bottom: 1px solid var(--line); }
+.qrow:last-child { border-bottom: 0; }
+.qhead { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; font: 11.5px var(--mono); color: var(--text-faint); }
+.verdict { font-weight: 500; } .verdict.ok { color: var(--ok); } .verdict.bad { color: var(--bad); }
+.qtext { font-size: 16.5px; margin: 4px 0 2px; }
+.qans { font: 12.5px var(--mono); color: var(--text-dim); display: flex; flex-wrap: wrap; gap: 2px 18px; }
+.qans b { color: var(--text); font-weight: 500; }
+.qrow summary { font: 12px var(--mono); color: var(--accent); cursor: pointer; margin-top: 6px; }
+.qrow ul { margin: 6px 0 0; padding-left: 18px; font-size: 14px; color: var(--text-dim); }
+.mem-note { font: 11.5px var(--mono); color: var(--text-faint); margin-top: 6px; }
+
+
+footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 40px; padding-top: 14px; border-top: 1px solid var(--line); font: 11.5px var(--mono); color: var(--text-faint); }
+#tip { position: fixed; pointer-events: none; z-index: 10; background: var(--text); color: var(--bg); font: 12px/1.45 var(--mono); padding: 6px 9px; max-width: 280px; opacity: 0; }
+
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; gap: 8px; }
+  .charts { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stat:nth-child(3) { border-left: 1px solid var(--line); }
+}
+@media (max-width: 640px) {
+  .cards { grid-template-columns: 1fr; }
+  .card + .card { border-left: 0; border-top: 1px solid var(--line-strong); }
+  .plot { gap: 6px; height: 230px; }
+  .who small { display: none; }
+  .who { font-size: 11.5px; }
+  .boxed { flex-direction: column; align-items: flex-start; }
+}
+@media (forced-colors: active) { .bar, .sw, .sq { background: CanvasText; } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <span class="mark"><i></i>memory-bench</span>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">◐ theme</button>
+  </header>
+  
+
+<div class="crumb">benchmarks / <b>agent-memory</b></div>
+<div class="hero">
+  <div class="hero-main">
+    <div class="chip"><i class="sq"></i>6 situations · 4 systems · last measured 20 Nov 2026</div>
+    <h1>Agent Memory Benchmark</h1>
+    <p>Mem0 leads accuracy at 81.0% and recall at 93.3%. Zep (Graphiti) leads precision at 90.9% and has the fewest stale answers at 16.7%. Mem0 and Zep (Graphiti) still return a deleted fact for some users. Independent benchmark of long-term memory for AI agents, on 3 synthetic users and 21 questions per system. Open source. Last measured 20 Nov 2026.</p>
+    <p><b>Why we built this.</b> A memory layer has three jobs: remember what the user said, keep up when it changes,
+    and forget what the user asks it to forget. Public comparisons of memory vendors argue about judging method.
+    This board uses template data with an exact answer key, so every score can be checked by hand.</p>
+    <p><b>Model-only baseline.</b> With no memory, the agent scores 28.6% accuracy, and every point comes from correctly saying UNKNOWN. Its recall is 0.0%. Putting the whole history in the prompt scores 85.7%, but the prompt grows with every session, and a long history can bury a forget request.</p>
+    <p><b>How it is measured.</b> The answering agent, its prompt and the scorer stay the same for every system,
+    so the comparison isolates the memory layer.</p>
+  </div>
+  <aside class="hero-side">
+    <p><b>How to read this.</b> Start from the situation that matches your product, then read that row.</p>
+    <ul>
+      <li><b>Remember.</b> Read <a href="#situations">plain recall</a> and <a href="#situations">someone else's fact</a>.</li>
+      <li><b>Keep up.</b> Read <a href="#situations">updated fact</a>. A stale answer counts as a failure.</li>
+      <li><b>Forget.</b> Read <a href="#situations">deleted fact</a>. The right answer is UNKNOWN.</li>
+    </ul>
+    <p class="small">20 Nov 2026 · first run with Mem0 and Zep (Graphiti) on 3 users.</p>
+  </aside>
+</div>
+<div class="cards"><a class="card" href="#situations"><span class="idx">[01]</span><b>Remember</b><span>Recall a fact about the user, and keep other people's facts apart.</span></a><a class="card" href="#situations"><span class="idx">[02]</span><b>Keep up</b><span>Give the current value after a change, and the old one when asked.</span></a><a class="card" href="#situations"><span class="idx">[03]</span><b>Forget</b><span>Drop a fact the user asked to delete. Admit what was never said.</span></a></div>
+<div class="stats"><div class="stat"><span class="eyebrow">No-memory accuracy</span><b>28.6%</b></div><div class="stat"><span class="eyebrow">Situations</span><b>6</b></div><div class="stat"><span class="eyebrow">Systems</span><b>4</b></div><div class="stat"><span class="eyebrow">Users</span><b>3</b></div></div>
+<div class="vendors"><div class="vendor"><i class="sw c1" aria-hidden="true"></i><span>Mem0</span><small>memory layer</small></div><div class="vendor"><i class="sw c2" aria-hidden="true"></i><span>Zep (Graphiti)</span><small>memory layer</small></div><div class="vendor"><i class="sw c3" aria-hidden="true"></i><span>Full history</span><small>baseline</small></div><div class="vendor"><i class="sw c4" aria-hidden="true"></i><span>No memory</span><small>baseline</small></div></div>
+
+<section id="overall">
+  <div class="eyebrow-line"><span class="idx">[01]</span> OVERALL</div>
+  <h2>Overall board</h2>
+  <p class="desc">Every system answers the same questions about the same users. Systems are listed alphabetically in the table;
+  charts sort each metric best-first. No single metric decides a ranking.</p>
+  <div class="issue">
+    <div class="issue-tag"><i class="sq"></i>PRELIMINARY · SMALL SAMPLE · FULL RUN PENDING</div>
+    <p><b>These results come from 3 users × 7 questions, 1 run.</b>
+    One question moves accuracy by about 5 points. A larger run with repeats will replace these numbers.</p>
+    <p class="note">Until then, treat differences under ~10 points as noise.</p>
+  </div>
+  <ul class="winners"><li><i class="sw c1" aria-hidden="true"></i>Mem0 is most accurate at 81.0%</li><li><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti) has the fewest stale answers at 16.7%</li><li><i class="sw c1" aria-hidden="true"></i>Mem0 is fastest to ingest at 5.62 s</li><li><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti) forgets best at 66.7%</li></ul>
+  <div class="bar-head"><span class="eyebrow">ALL SYSTEMS PER METRIC</span>
+    <div class="seg" role="group" aria-label="View"><button type="button" data-view="charts" aria-pressed="true">CHARTS</button><button type="button" data-view="table" aria-pressed="false">TABLE</button></div></div>
+  <div class="charts" id="view-charts"><figure class="chart">
+  <figcaption><i class="sq"></i><b>Accuracy</b><span>n = 21 · correct ÷ all questions · ↑</span></figcaption>
+  <div class="plot"><div class="col" data-tip="Full history · Accuracy: 85.7% (baseline)">
+  <div class="bar-area"><span class="val">85.7%</span><div class="bar c3" style="height:85.7%"></div></div>
+  <div class="who"><i class="sw c3" aria-hidden="true"></i><b>Full history</b><small>baseline</small></div>
+</div><div class="col" data-tip="Mem0 · Accuracy: 81.0%">
+  <div class="bar-area"><span class="val">81.0%</span><div class="bar c1" style="height:81.0%"></div></div>
+  <div class="who"><i class="sw c1" aria-hidden="true"></i><b>Mem0</b><small>oss · local</small></div>
+</div><div class="col" data-tip="Zep (Graphiti) · Accuracy: 71.4%">
+  <div class="bar-area"><span class="val">71.4%</span><div class="bar c2" style="height:71.4%"></div></div>
+  <div class="who"><i class="sw c2" aria-hidden="true"></i><b>Zep (Graphiti)</b><small>oss · local</small></div>
+</div><div class="col" data-tip="No memory · Accuracy: 28.6% (baseline)">
+  <div class="bar-area"><span class="val">28.6%</span><div class="bar c4" style="height:28.6%"></div></div>
+  <div class="who"><i class="sw c4" aria-hidden="true"></i><b>No memory</b><small>baseline</small></div>
+</div></div>
+</figure><figure class="chart">
+  <figcaption><i class="sq"></i><b>Recall</b><span>n = 21 · facts it should know that it got · ↑</span></figcaption>
+  <div class="plot"><div class="col" data-tip="Full history · Recall: 100.0% (baseline)">
+  <div class="bar-area"><span class="val">100.0%</span><div class="bar c3" style="height:100.0%"></div></div>
+  <div class="who"><i class="sw c3" aria-hidden="true"></i><b>Full history</b><small>baseline</small></div>
+</div><div class="col" data-tip="Mem0 · Recall: 93.3%">
+  <div class="bar-area"><span class="val">93.3%</span><div class="bar c1" style="height:93.3%"></div></div>
+  <div class="who"><i class="sw c1" aria-hidden="true"></i><b>Mem0</b><small>oss · local</small></div>
+</div><div class="col" data-tip="Zep (Graphiti) · Recall: 66.7%">
+  <div class="bar-area"><span class="val">66.7%</span><div class="bar c2" style="height:66.7%"></div></div>
+  <div class="who"><i class="sw c2" aria-hidden="true"></i><b>Zep (Graphiti)</b><small>oss · local</small></div>
+</div><div class="col" data-tip="No memory · Recall: 0.0% (baseline)">
+  <div class="bar-area"><span class="val">0.0%</span><div class="bar c4" style="height:0.5%"></div></div>
+  <div class="who"><i class="sw c4" aria-hidden="true"></i><b>No memory</b><small>baseline</small></div>
+</div></div>
+</figure><figure class="chart">
+  <figcaption><i class="sq"></i><b>Precision</b><span>n = 21 · right when it gives an answer · ↑</span></figcaption>
+  <div class="plot"><div class="col" data-tip="Zep (Graphiti) · Precision: 90.9%">
+  <div class="bar-area"><span class="val">90.9%</span><div class="bar c2" style="height:90.9%"></div></div>
+  <div class="who"><i class="sw c2" aria-hidden="true"></i><b>Zep (Graphiti)</b><small>oss · local</small></div>
+</div><div class="col" data-tip="Full history · Precision: 83.3% (baseline)">
+  <div class="bar-area"><span class="val">83.3%</span><div class="bar c3" style="height:83.3%"></div></div>
+  <div class="who"><i class="sw c3" aria-hidden="true"></i><b>Full history</b><small>baseline</small></div>
+</div><div class="col" data-tip="Mem0 · Precision: 77.8%">
+  <div class="bar-area"><span class="val">77.8%</span><div class="bar c1" style="height:77.8%"></div></div>
+  <div class="who"><i class="sw c1" aria-hidden="true"></i><b>Mem0</b><small>oss · local</small></div>
+</div><div class="col" data-tip="No memory · Precision: 0.0% (baseline)">
+  <div class="bar-area"><span class="val">0.0%</span><div class="bar c4" style="height:0.5%"></div></div>
+  <div class="who"><i class="sw c4" aria-hidden="true"></i><b>No memory</b><small>baseline</small></div>
+</div></div>
+</figure><figure class="chart">
+  <figcaption><i class="sq"></i><b>F1</b><span>n = 21 · harmonic mean of precision and recall · ↑</span></figcaption>
+  <div class="plot"><div class="col" data-tip="Full history · F1: 90.9% (baseline)">
+  <div class="bar-area"><span class="val">90.9%</span><div class="bar c3" style="height:90.9%"></div></div>
+  <div class="who"><i class="sw c3" aria-hidden="true"></i><b>Full history</b><small>baseline</small></div>
+</div><div class="col" data-tip="Mem0 · F1: 84.8%">
+  <div class="bar-area"><span class="val">84.8%</span><div class="bar c1" style="height:84.8%"></div></div>
+  <div class="who"><i class="sw c1" aria-hidden="true"></i><b>Mem0</b><small>oss · local</small></div>
+</div><div class="col" data-tip="Zep (Graphiti) · F1: 76.9%">
+  <div class="bar-area"><span class="val">76.9%</span><div class="bar c2" style="height:76.9%"></div></div>
+  <div class="who"><i class="sw c2" aria-hidden="true"></i><b>Zep (Graphiti)</b><small>oss · local</small></div>
+</div><div class="col" data-tip="No memory · F1: 0.0% (baseline)">
+  <div class="bar-area"><span class="val">0.0%</span><div class="bar c4" style="height:0.5%"></div></div>
+  <div class="who"><i class="sw c4" aria-hidden="true"></i><b>No memory</b><small>baseline</small></div>
+</div></div>
+</figure><figure class="chart">
+  <figcaption><i class="sq"></i><b>Abstain</b><span>n = 21 · says UNKNOWN when it should · ↑</span></figcaption>
+  <div class="plot"><div class="col" data-tip="No memory · Abstain: 100.0% (baseline)">
+  <div class="bar-area"><span class="val">100.0%</span><div class="bar c4" style="height:100.0%"></div></div>
+  <div class="who"><i class="sw c4" aria-hidden="true"></i><b>No memory</b><small>baseline</small></div>
+</div><div class="col" data-tip="Zep (Graphiti) · Abstain: 83.3%">
+  <div class="bar-area"><span class="val">83.3%</span><div class="bar c2" style="height:83.3%"></div></div>
+  <div class="who"><i class="sw c2" aria-hidden="true"></i><b>Zep (Graphiti)</b><small>oss · local</small></div>
+</div><div class="col" data-tip="Mem0 · Abstain: 50.0%">
+  <div class="bar-area"><span class="val">50.0%</span><div class="bar c1" style="height:50.0%"></div></div>
+  <div class="who"><i class="sw c1" aria-hidden="true"></i><b>Mem0</b><small>oss · local</small></div>
+</div><div class="col" data-tip="Full history · Abstain: 50.0% (baseline)">
+  <div class="bar-area"><span class="val">50.0%</span><div class="bar c3" style="height:50.0%"></div></div>
+  <div class="who"><i class="sw c3" aria-hidden="true"></i><b>Full history</b><small>baseline</small></div>
+</div></div>
+</figure><figure class="chart">
+  <figcaption><i class="sq"></i><b>Stale answers</b><span>n = 21 · replies with the outdated value · ↓</span></figcaption>
+  <div class="plot"><div class="col" data-tip="No memory · Stale answers: 0.0% (baseline)">
+  <div class="bar-area"><span class="val">0.0%</span><div class="bar c4" style="height:0.5%"></div></div>
+  <div class="who"><i class="sw c4" aria-hidden="true"></i><b>No memory</b><small>baseline</small></div>
+</div><div class="col" data-tip="Zep (Graphiti) · Stale answers: 16.7%">
+  <div class="bar-area"><span class="val">16.7%</span><div class="bar c2" style="height:16.7%"></div></div>
+  <div class="who"><i class="sw c2" aria-hidden="true"></i><b>Zep (Graphiti)</b><small>oss · local</small></div>
+</div><div class="col" data-tip="Full history · Stale answers: 50.0% (baseline)">
+  <div class="bar-area"><span class="val">50.0%</span><div class="bar c3" style="height:50.0%"></div></div>
+  <div class="who"><i class="sw c3" aria-hidden="true"></i><b>Full history</b><small>baseline</small></div>
+</div><div class="col" data-tip="Mem0 · Stale answers: 66.7%">
+  <div class="bar-area"><span class="val">66.7%</span><div class="bar c1" style="height:66.7%"></div></div>
+  <div class="who"><i class="sw c1" aria-hidden="true"></i><b>Mem0</b><small>oss · local</small></div>
+</div></div>
+</figure><figure class="chart">
+  <figcaption><i class="sq"></i><b>Ingest time</b><span>wall time · median seconds per session · ↓</span></figcaption>
+  <div class="plot"><div class="col" data-tip="Full history · Ingest time: &lt;0.01 s (baseline)">
+  <div class="bar-area"><span class="val"><0.01 s</span><div class="bar c3" style="height:0.5%"></div></div>
+  <div class="who"><i class="sw c3" aria-hidden="true"></i><b>Full history</b><small>baseline</small></div>
+</div><div class="col" data-tip="No memory · Ingest time: &lt;0.01 s (baseline)">
+  <div class="bar-area"><span class="val"><0.01 s</span><div class="bar c4" style="height:0.5%"></div></div>
+  <div class="who"><i class="sw c4" aria-hidden="true"></i><b>No memory</b><small>baseline</small></div>
+</div><div class="col" data-tip="Mem0 · Ingest time: 5.62 s">
+  <div class="bar-area"><span class="val">5.62 s</span><div class="bar c1" style="height:24.4%"></div></div>
+  <div class="who"><i class="sw c1" aria-hidden="true"></i><b>Mem0</b><small>oss · local</small></div>
+</div><div class="col" data-tip="Zep (Graphiti) · Ingest time: 23.00 s">
+  <div class="bar-area"><span class="val">23.00 s</span><div class="bar c2" style="height:100.0%"></div></div>
+  <div class="who"><i class="sw c2" aria-hidden="true"></i><b>Zep (Graphiti)</b><small>oss · local</small></div>
+</div></div>
+</figure><figure class="chart">
+  <figcaption><i class="sq"></i><b>Retrieve time</b><span>wall time · median ms per search · ↓</span></figcaption>
+  <div class="plot"><div class="col" data-tip="Full history · Retrieve time: &lt;1 ms (baseline)">
+  <div class="bar-area"><span class="val"><1 ms</span><div class="bar c3" style="height:0.5%"></div></div>
+  <div class="who"><i class="sw c3" aria-hidden="true"></i><b>Full history</b><small>baseline</small></div>
+</div><div class="col" data-tip="No memory · Retrieve time: &lt;1 ms (baseline)">
+  <div class="bar-area"><span class="val"><1 ms</span><div class="bar c4" style="height:0.5%"></div></div>
+  <div class="who"><i class="sw c4" aria-hidden="true"></i><b>No memory</b><small>baseline</small></div>
+</div><div class="col" data-tip="Mem0 · Retrieve time: 20 ms">
+  <div class="bar-area"><span class="val">20 ms</span><div class="bar c1" style="height:60.3%"></div></div>
+  <div class="who"><i class="sw c1" aria-hidden="true"></i><b>Mem0</b><small>oss · local</small></div>
+</div><div class="col" data-tip="Zep (Graphiti) · Retrieve time: 32 ms">
+  <div class="bar-area"><span class="val">32 ms</span><div class="bar c2" style="height:100.0%"></div></div>
+  <div class="who"><i class="sw c2" aria-hidden="true"></i><b>Zep (Graphiti)</b><small>oss · local</small></div>
+</div></div>
+</figure></div>
+  <div class="table-wrap" id="view-table" hidden><table>
+<caption>Memory systems on identical users and questions. Vendors alphabetical, then baselines. ▲ best vendor value per column.</caption>
+<thead><tr><th>System</th><th class="l">Configuration</th><th>Accuracy</th><th>Recall</th><th>Precision</th><th>F1</th><th>Abstain</th><th>Stale answers</th><th>Ingest time</th><th>Retrieve time</th></tr></thead>
+<tbody><tr><td class="sys"><i class="sw c1" aria-hidden="true"></i>Mem0</td><td class="cfg">mem0ai (open source, local) · Qdrant · extraction qwen3.5 · nomic-embed-text</td><td class="num best">81.0%</td><td class="num best">93.3%</td><td class="num">77.8%</td><td class="num best">84.8%</td><td class="num">50.0%</td><td class="num">66.7%</td><td class="num best">5.62 s</td><td class="num best">20 ms</td></tr><tr><td class="sys"><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</td><td class="cfg">graphiti-core 0.31, Zep&#x27;s open-source engine · Kuzu · extraction qwen3.5 · nomic-embed-text</td><td class="num">71.4%</td><td class="num">66.7%</td><td class="num best">90.9%</td><td class="num">76.9%</td><td class="num best">83.3%</td><td class="num best">16.7%</td><td class="num">23.00 s</td><td class="num">32 ms</td></tr><tr><td class="sys"><i class="sw c3" aria-hidden="true"></i>Full history<span class="tag">baseline</span></td><td class="cfg">Every past message, in order, in the prompt. No retrieval.</td><td class="num">85.7%</td><td class="num">100.0%</td><td class="num">83.3%</td><td class="num">90.9%</td><td class="num">50.0%</td><td class="num">50.0%</td><td class="num"><0.01 s</td><td class="num"><1 ms</td></tr><tr><td class="sys"><i class="sw c4" aria-hidden="true"></i>No memory<span class="tag">baseline</span></td><td class="cfg">Stores nothing. Shows what the agent gets right with no memory.</td><td class="num">28.6%</td><td class="num">0.0%</td><td class="num">0.0%</td><td class="num">0.0%</td><td class="num">100.0%</td><td class="num">0.0%</td><td class="num"><0.01 s</td><td class="num"><1 ms</td></tr></tbody></table></div>
+  <div class="boxed"><span class="tag2">OPEN CODE</span><span>Data generator, harness, adapters and scorer: <code>generate.py</code>, <code>eval.py</code>, <code>memory.py</code>, <code>report.py</code>.</span></div>
+  <details class="acc"><summary><span>[01.a]</span> methodology and metric definitions</summary><div>
+    <h3>How the board is built</h3>
+    <ol>
+      <li>Generate users from templates with a fixed seed. Every answer key is exact.</li>
+      <li>For each system: <code>reset</code> the user, then <code>ingest</code> each session in time order.</li>
+      <li>For each question: <code>retrieve</code> memories, then pass them to one fixed agent (qwen3.5 via Ollama, temperature 0, thinking off).</li>
+      <li>The agent replies with a short answer or exactly <code>UNKNOWN</code>. Scoring is normalized exact match. No LLM judge.</li>
+      <li>The agent is <b>not</b> told to respect forget requests. Deleting a fact is the memory system's job, so the deleted-fact row measures the memory system alone.</li>
+    </ol>
+    <h3>What each metric means</h3>
+    <ul>
+      <li><b>Accuracy</b> · correct ÷ all questions. UNKNOWN on an unanswerable question counts as correct.</li>
+      <li><b>Precision</b> · correct answers ÷ all non-UNKNOWN answers.</li>
+      <li><b>Recall</b> · correct answers ÷ questions that have a real answer.</li>
+      <li><b>F1</b> · harmonic mean of precision and recall.</li>
+      <li><b>Abstain</b> · UNKNOWN replies ÷ questions whose answer is UNKNOWN.</li>
+      <li><b>Stale answers</b> · replies equal to the outdated value ÷ questions that have one. Lower is better.</li>
+      <li><b>Ingest / retrieve time</b> · wall time on one Mac with local models. Compare systems only within this board.</li>
+    </ul>
+  </div></details>
+</section>
+
+<section id="situations">
+  <div class="eyebrow-line"><span class="idx">[02]</span> BY SITUATION</div>
+  <h2>Accuracy by situation</h2>
+  <p class="desc">Each question type tests one memory behaviour. The cell shade grows with accuracy. The fraction is correct ÷ total.</p>
+  <div class="table-wrap"><table class="heat"><thead><tr><th>System</th><th>Plain recall</th><th>Someone else&#x27;s fact</th><th>Updated fact</th><th>Previous value</th><th>Deleted fact</th><th>Never mentioned</th></tr></thead><tbody><tr><td class="sys"><i class="sw c1" aria-hidden="true"></i>Mem0</td><td class="cell" style="--a:38%" data-tip="Mem0 · Plain recall: 6/6 correct">100%<small>6/6</small></td><td class="cell" style="--a:38%" data-tip="Mem0 · Someone else&#x27;s fact: 3/3 correct">100%<small>3/3</small></td><td class="cell" style="--a:25%" data-tip="Mem0 · Updated fact: 2/3 correct">67%<small>2/3</small></td><td class="cell" style="--a:38%" data-tip="Mem0 · Previous value: 3/3 correct">100%<small>3/3</small></td><td class="cell" style="--a:0%" data-tip="Mem0 · Deleted fact: 0/3 correct">0%<small>0/3</small></td><td class="cell" style="--a:38%" data-tip="Mem0 · Never mentioned: 3/3 correct">100%<small>3/3</small></td></tr><tr><td class="sys"><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</td><td class="cell" style="--a:19%" data-tip="Zep (Graphiti) · Plain recall: 3/6 correct">50%<small>3/6</small></td><td class="cell" style="--a:25%" data-tip="Zep (Graphiti) · Someone else&#x27;s fact: 2/3 correct">67%<small>2/3</small></td><td class="cell" style="--a:25%" data-tip="Zep (Graphiti) · Updated fact: 2/3 correct">67%<small>2/3</small></td><td class="cell" style="--a:38%" data-tip="Zep (Graphiti) · Previous value: 3/3 correct">100%<small>3/3</small></td><td class="cell" style="--a:25%" data-tip="Zep (Graphiti) · Deleted fact: 2/3 correct">67%<small>2/3</small></td><td class="cell" style="--a:38%" data-tip="Zep (Graphiti) · Never mentioned: 3/3 correct">100%<small>3/3</small></td></tr><tr><td class="sys"><i class="sw c3" aria-hidden="true"></i>Full history</td><td class="cell" style="--a:38%" data-tip="Full history · Plain recall: 6/6 correct">100%<small>6/6</small></td><td class="cell" style="--a:38%" data-tip="Full history · Someone else&#x27;s fact: 3/3 correct">100%<small>3/3</small></td><td class="cell" style="--a:38%" data-tip="Full history · Updated fact: 3/3 correct">100%<small>3/3</small></td><td class="cell" style="--a:38%" data-tip="Full history · Previous value: 3/3 correct">100%<small>3/3</small></td><td class="cell" style="--a:0%" data-tip="Full history · Deleted fact: 0/3 correct">0%<small>0/3</small></td><td class="cell" style="--a:38%" data-tip="Full history · Never mentioned: 3/3 correct">100%<small>3/3</small></td></tr><tr><td class="sys"><i class="sw c4" aria-hidden="true"></i>No memory</td><td class="cell" style="--a:0%" data-tip="No memory · Plain recall: 0/6 correct">0%<small>0/6</small></td><td class="cell" style="--a:0%" data-tip="No memory · Someone else&#x27;s fact: 0/3 correct">0%<small>0/3</small></td><td class="cell" style="--a:0%" data-tip="No memory · Updated fact: 0/3 correct">0%<small>0/3</small></td><td class="cell" style="--a:0%" data-tip="No memory · Previous value: 0/3 correct">0%<small>0/3</small></td><td class="cell" style="--a:38%" data-tip="No memory · Deleted fact: 3/3 correct">100%<small>3/3</small></td><td class="cell" style="--a:38%" data-tip="No memory · Never mentioned: 3/3 correct">100%<small>3/3</small></td></tr></tbody></table></div>
+  <details class="acc"><summary><span>[02.a]</span> how the dataset is built</summary><div>
+    <p>Each user has a timeline of chat sessions. Four sessions carry facts, in this order. All other sessions are small talk.</p>
+    <ol>
+      <li><b>Intro</b> · pet name, home city, work email.</li>
+      <li><b>Sibling</b> · the sibling's name and city (another person's facts).</li>
+      <li><b>Move</b> · the user moves to a new city and a new company.</li>
+      <li><b>Forget</b> · the user asks the assistant to forget the old work email.</li>
+    </ol>
+    <p>Filler lines mention other cities as hard negatives. The old city, new city and sibling city are always different.
+    A self-check rejects any user whose answer is missing from the text, or whose deleted email appears after the forget request.</p>
+  </div></details>
+</section>
+
+<section id="answers">
+  <div class="eyebrow-line"><span class="idx">[03]</span> EVERY ANSWER</div>
+  <h2>Every answer</h2>
+  <p class="desc">The rows behind the tables: the question, the answer key, the reply, and the memories the system returned.</p>
+  <div class="toolbar">
+  <select id="fSys" aria-label="System"><option value="">All systems</option><option value="mem0">Mem0</option><option value="zep">Zep (Graphiti)</option><option value="full">Full history</option><option value="none">No memory</option></select>
+  <select id="fType" aria-label="Situation"><option value="">All situations</option><option value="plain_recall">Plain recall</option><option value="other_person">Someone else&#x27;s fact</option><option value="updated_fact">Updated fact</option><option value="previous_value">Previous value</option><option value="deleted_fact">Deleted fact</option><option value="never_mentioned">Never mentioned</option></select>
+  <select id="fOut" aria-label="Outcome"><option value="all">All answers</option><option value="0">Failures only</option><option value="1">Passes only</option></select>
+  <span class="count" id="fCount">84 rows</span>
+</div>
+<div class="qlist" id="qlist"><div class="qrow" data-sys="none" data-type="plain_recall" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Plain recall</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What did I name my rabbit?</div>
+  <div class="qans"><span>expected <b>Coco</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="plain_recall" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Plain recall</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What&#x27;s my cousin&#x27;s name?</div>
+  <div class="qans"><span>expected <b>Suresh</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="updated_fact" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Updated fact</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What city do I live in?</div>
+  <div class="qans"><span>expected <b>Hyderabad</b></span><span>got <b>UNKNOWN</b></span><span>outdated value Bangalore</span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="previous_value" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Previous value</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">Where did I live before?</div>
+  <div class="qans"><span>expected <b>Bangalore</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="deleted_fact" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Deleted fact</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What&#x27;s my work email?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span><span>outdated value vikram@flipkart.com</span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="never_mentioned" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Never mentioned</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What&#x27;s my favorite football team?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="other_person" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Someone else&#x27;s fact</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">Which city does my cousin live in?</div>
+  <div class="qans"><span>expected <b>Pune</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="plain_recall" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Plain recall</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">What did I name my rabbit?</div>
+  <div class="qans"><span>expected <b>Coco</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="plain_recall" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Plain recall</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">What&#x27;s my sister&#x27;s name?</div>
+  <div class="qans"><span>expected <b>Swathi</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="updated_fact" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Updated fact</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">Where am I based currently?</div>
+  <div class="qans"><span>expected <b>Pune</b></span><span>got <b>UNKNOWN</b></span><span>outdated value Delhi</span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="previous_value" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Previous value</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">Where did I live before?</div>
+  <div class="qans"><span>expected <b>Delhi</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="deleted_fact" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Deleted fact</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">What&#x27;s my work email?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span><span>outdated value harsha@razorpay.com</span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="never_mentioned" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Never mentioned</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">What&#x27;s my blood type?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="other_person" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Someone else&#x27;s fact</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">Where does my sister live?</div>
+  <div class="qans"><span>expected <b>Mumbai</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="plain_recall" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Plain recall</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What is the name of my beagle?</div>
+  <div class="qans"><span>expected <b>Coco</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="plain_recall" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Plain recall</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What&#x27;s my brother&#x27;s name?</div>
+  <div class="qans"><span>expected <b>Suresh</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="updated_fact" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Updated fact</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What city do I live in?</div>
+  <div class="qans"><span>expected <b>Pune</b></span><span>got <b>UNKNOWN</b></span><span>outdated value Mumbai</span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="previous_value" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Previous value</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">Where did I live before?</div>
+  <div class="qans"><span>expected <b>Mumbai</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="deleted_fact" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Deleted fact</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What&#x27;s my work email?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span><span>outdated value siddharth@swiggy.com</span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="never_mentioned" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Never mentioned</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What did I study in college?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="none" data-type="other_person" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c4" aria-hidden="true"></i>No memory</span><span>Someone else&#x27;s fact</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">Which city does my brother live in?</div>
+  <div class="qans"><span>expected <b>Kolkata</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="full" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Plain recall</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What did I name my rabbit?</div>
+  <div class="qans"><span>expected <b>Coco</b></span><span>got <b>Coco</b></span></div>
+  <div class="mem-note">70 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Plain recall</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What&#x27;s my cousin&#x27;s name?</div>
+  <div class="qans"><span>expected <b>Suresh</b></span><span>got <b>Suresh</b></span></div>
+  <div class="mem-note">70 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="updated_fact" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Updated fact</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What city do I live in?</div>
+  <div class="qans"><span>expected <b>Hyderabad</b></span><span>got <b>Hyderabad</b></span><span>outdated value Bangalore</span></div>
+  <div class="mem-note">70 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="previous_value" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Previous value</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">Where did I live before?</div>
+  <div class="qans"><span>expected <b>Bangalore</b></span><span>got <b>Bangalore</b></span></div>
+  <div class="mem-note">70 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="deleted_fact" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Deleted fact</span>
+    <span>user g000 · run 0</span><span class="verdict bad">stale value</span></div>
+  <div class="qtext">What&#x27;s my work email?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>vikram@flipkart.com</b></span><span>outdated value vikram@flipkart.com</span></div>
+  <div class="mem-note">70 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="never_mentioned" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Never mentioned</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What&#x27;s my favorite football team?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span></div>
+  <div class="mem-note">70 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="other_person" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Someone else&#x27;s fact</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">Which city does my cousin live in?</div>
+  <div class="qans"><span>expected <b>Pune</b></span><span>got <b>Pune</b></span></div>
+  <div class="mem-note">70 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Plain recall</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">What did I name my rabbit?</div>
+  <div class="qans"><span>expected <b>Coco</b></span><span>got <b>Coco</b></span></div>
+  <div class="mem-note">60 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Plain recall</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">What&#x27;s my sister&#x27;s name?</div>
+  <div class="qans"><span>expected <b>Swathi</b></span><span>got <b>Swathi</b></span></div>
+  <div class="mem-note">60 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="updated_fact" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Updated fact</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">Where am I based currently?</div>
+  <div class="qans"><span>expected <b>Pune</b></span><span>got <b>Pune</b></span><span>outdated value Delhi</span></div>
+  <div class="mem-note">60 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="previous_value" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Previous value</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">Where did I live before?</div>
+  <div class="qans"><span>expected <b>Delhi</b></span><span>got <b>Delhi</b></span></div>
+  <div class="mem-note">60 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="deleted_fact" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Deleted fact</span>
+    <span>user g001 · run 0</span><span class="verdict bad">stale value</span></div>
+  <div class="qtext">What&#x27;s my work email?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>harsha@razorpay.com</b></span><span>outdated value harsha@razorpay.com</span></div>
+  <div class="mem-note">60 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="never_mentioned" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Never mentioned</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">What&#x27;s my blood type?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span></div>
+  <div class="mem-note">60 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="other_person" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Someone else&#x27;s fact</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">Where does my sister live?</div>
+  <div class="qans"><span>expected <b>Mumbai</b></span><span>got <b>Mumbai</b></span></div>
+  <div class="mem-note">60 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Plain recall</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What is the name of my beagle?</div>
+  <div class="qans"><span>expected <b>Coco</b></span><span>got <b>Coco</b></span></div>
+  <div class="mem-note">68 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Plain recall</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What&#x27;s my brother&#x27;s name?</div>
+  <div class="qans"><span>expected <b>Suresh</b></span><span>got <b>Suresh</b></span></div>
+  <div class="mem-note">68 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="updated_fact" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Updated fact</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What city do I live in?</div>
+  <div class="qans"><span>expected <b>Pune</b></span><span>got <b>Pune</b></span><span>outdated value Mumbai</span></div>
+  <div class="mem-note">68 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="previous_value" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Previous value</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">Where did I live before?</div>
+  <div class="qans"><span>expected <b>Mumbai</b></span><span>got <b>Mumbai</b></span></div>
+  <div class="mem-note">68 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="deleted_fact" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Deleted fact</span>
+    <span>user g002 · run 0</span><span class="verdict bad">stale value</span></div>
+  <div class="qtext">What&#x27;s my work email?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>siddharth@swiggy.com</b></span><span>outdated value siddharth@swiggy.com</span></div>
+  <div class="mem-note">68 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="never_mentioned" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Never mentioned</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What did I study in college?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span></div>
+  <div class="mem-note">68 messages passed (full history)</div>
+</div><div class="qrow" data-sys="full" data-type="other_person" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c3" aria-hidden="true"></i>Full history</span><span>Someone else&#x27;s fact</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">Which city does my brother live in?</div>
+  <div class="qans"><span>expected <b>Kolkata</b></span><span>got <b>Kolkata</b></span></div>
+  <div class="mem-note">68 messages passed (full history)</div>
+</div><div class="qrow" data-sys="mem0" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Plain recall</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What did I name my rabbit?</div>
+  <div class="qans"><span>expected <b>Coco</b></span><span>got <b>Coco</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User recently adopted a rabbit named Coco.</li><li>User&#x27;s rabbit Coco chewed their headphones.</li><li>User&#x27;s rabbit Coco chewed their headphones again, indicating a recurring behavior.</li><li>User watched a cricket match highlight from Delhi on November 19, 2026.</li><li>User watched a cricket match highlight from Jaipur on November 19, 2026.</li><li>User has a cousin named Suresh who lives in Pune, and they communicate with each other every weekend.</li><li>User moved from Bangalore to Hyderabad and started a new job at Ola.</li><li>User watched a documentary about the old architecture of Jaipur.</li><li>User lives in Bangalore.</li><li>User recently watched a documentary focused on the old architecture of Delhi.</li><li>User was recommended the book &#x27;Project Hail Mary&#x27; as a good read for long flights.</li><li>User works at Flipkart and uses the email address vikram@flipkart.com for work.</li><li>User was recommended to start running slowly and build up endurance gradually.</li><li>User is interested in learning how to cook and was advised to start by mastering 5 simple recipes through repetition.</li><li>User is thinking of starting a morning running routine and was advised to start slowly and build up endurance gradually.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Plain recall</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What&#x27;s my cousin&#x27;s name?</div>
+  <div class="qans"><span>expected <b>Suresh</b></span><span>got <b>Suresh</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User has a cousin named Suresh who lives in Pune, and they communicate with each other every weekend.</li><li>User recently adopted a rabbit named Coco.</li><li>User lives in Bangalore.</li><li>User works at Flipkart and uses the email address vikram@flipkart.com for work.</li><li>User watched a cricket match highlight from Jaipur on November 19, 2026.</li><li>User watched a cricket match highlight from Delhi on November 19, 2026.</li><li>User moved from Bangalore to Hyderabad and started a new job at Ola.</li><li>User watched a documentary about the old architecture of Kolkata.</li><li>User is interested in learning how to cook and was advised to start by mastering 5 simple recipes through repetition.</li><li>User was recommended the book &#x27;Project Hail Mary&#x27; as a good read for long flights.</li><li>User asked for a quick dinner recipe that can be made in 15 minutes and was recommended vegetable stir fry with rice.</li><li>User watched a documentary about the old architecture of Jaipur.</li><li>User&#x27;s rabbit Coco chewed their headphones again, indicating a recurring behavior.</li><li>User recently watched a documentary focused on the old architecture of Delhi.</li><li>User&#x27;s rabbit Coco chewed their headphones.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="updated_fact" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Updated fact</span>
+    <span>user g000 · run 0</span><span class="verdict bad">stale value</span></div>
+  <div class="qtext">What city do I live in?</div>
+  <div class="qans"><span>expected <b>Hyderabad</b></span><span>got <b>Bangalore</b></span><span>outdated value Bangalore</span></div>
+  <details><summary>20 memories returned</summary><ul><li>User lives in Bangalore.</li><li>User moved from Bangalore to Hyderabad and started a new job at Ola.</li><li>User has a cousin named Suresh who lives in Pune, and they communicate with each other every weekend.</li><li>User watched a documentary about the old architecture of Kolkata.</li><li>User recently watched a documentary focused on the old architecture of Delhi.</li><li>User watched a cricket match highlight from Delhi on November 19, 2026.</li><li>User works at Flipkart and uses the email address vikram@flipkart.com for work.</li><li>User watched a documentary about the old architecture of Jaipur.</li><li>User watched a cricket match highlight from Jaipur on November 19, 2026.</li><li>User is seeking tips for improving their sleep quality.</li><li>User recently adopted a rabbit named Coco.</li><li>User is interested in starting a morning running routine.</li><li>User was recommended the book &#x27;Project Hail Mary&#x27; as a good read for long flights.</li><li>User was recommended to start running slowly and build up endurance gradually.</li><li>User requested to have their old work email address forgotten and updated in the system.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="previous_value" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Previous value</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">Where did I live before?</div>
+  <div class="qans"><span>expected <b>Bangalore</b></span><span>got <b>Bangalore</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User lives in Bangalore.</li><li>User moved from Bangalore to Hyderabad and started a new job at Ola.</li><li>User watched a documentary about the old architecture of Kolkata.</li><li>User recently watched a documentary focused on the old architecture of Delhi.</li><li>User watched a documentary about the old architecture of Jaipur.</li><li>User has a cousin named Suresh who lives in Pune, and they communicate with each other every weekend.</li><li>User watched a cricket match highlight from Jaipur on November 19, 2026.</li><li>User watched a cricket match highlight from Delhi on November 19, 2026.</li><li>User requested to have their old work email address forgotten and updated in the system.</li><li>User recently adopted a rabbit named Coco.</li><li>User is interested in learning how to cook and was advised to start by mastering 5 simple recipes through repetition.</li><li>User was advised to improve sleep by maintaining a fixed schedule and avoiding screens before bed.</li><li>User was recommended the book &#x27;Project Hail Mary&#x27; as a good read for long flights.</li><li>User was recommended to start running slowly and build up endurance gradually.</li><li>User&#x27;s rabbit Coco chewed their headphones again, indicating a recurring behavior.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="deleted_fact" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Deleted fact</span>
+    <span>user g000 · run 0</span><span class="verdict bad">stale value</span></div>
+  <div class="qtext">What&#x27;s my work email?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>vikram@flipkart.com</b></span><span>outdated value vikram@flipkart.com</span></div>
+  <details><summary>20 memories returned</summary><ul><li>User requested to have their old work email address forgotten and updated in the system.</li><li>User works at Flipkart and uses the email address vikram@flipkart.com for work.</li><li>User moved from Bangalore to Hyderabad and started a new job at Ola.</li><li>User has a cousin named Suresh who lives in Pune, and they communicate with each other every weekend.</li><li>User lives in Bangalore.</li><li>User watched a cricket match highlight from Delhi on November 19, 2026.</li><li>User watched a cricket match highlight from Jaipur on November 19, 2026.</li><li>User is interested in starting a morning running routine.</li><li>User was recommended the book &#x27;Project Hail Mary&#x27; as a good read for long flights.</li><li>User was advised to resolve laptop freezing by closing background applications and checking for system updates.</li><li>User is seeking tips for improving their sleep quality.</li><li>User&#x27;s laptop is experiencing freezing issues, prompting a request for troubleshooting tips.</li><li>User was advised to improve sleep by maintaining a fixed schedule and avoiding screens before bed.</li><li>User watched a documentary about the old architecture of Jaipur.</li><li>User recently adopted a rabbit named Coco.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="never_mentioned" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Never mentioned</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What&#x27;s my favorite football team?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User has a cousin named Suresh who lives in Pune, and they communicate with each other every weekend.</li><li>User watched a cricket match highlight from Delhi on November 19, 2026.</li><li>User watched a cricket match highlight from Jaipur on November 19, 2026.</li><li>User lives in Bangalore.</li><li>User moved from Bangalore to Hyderabad and started a new job at Ola.</li><li>User was recommended the book &#x27;Project Hail Mary&#x27; as a good read for long flights.</li><li>User watched a documentary about the old architecture of Kolkata.</li><li>User recently watched a documentary focused on the old architecture of Delhi.</li><li>User works at Flipkart and uses the email address vikram@flipkart.com for work.</li><li>User is interested in starting a morning running routine.</li><li>User watched a documentary about the old architecture of Jaipur.</li><li>User asked for a quick dinner recipe that can be made in 15 minutes and was recommended vegetable stir fry with rice.</li><li>User was recommended to start running slowly and build up endurance gradually.</li><li>User recently adopted a rabbit named Coco.</li><li>User is interested in learning how to cook and was advised to start by mastering 5 simple recipes through repetition.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="other_person" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Someone else&#x27;s fact</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">Which city does my cousin live in?</div>
+  <div class="qans"><span>expected <b>Pune</b></span><span>got <b>Pune</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User has a cousin named Suresh who lives in Pune, and they communicate with each other every weekend.</li><li>User lives in Bangalore.</li><li>User moved from Bangalore to Hyderabad and started a new job at Ola.</li><li>User watched a documentary about the old architecture of Kolkata.</li><li>User watched a cricket match highlight from Delhi on November 19, 2026.</li><li>User recently watched a documentary focused on the old architecture of Delhi.</li><li>User works at Flipkart and uses the email address vikram@flipkart.com for work.</li><li>User watched a cricket match highlight from Jaipur on November 19, 2026.</li><li>User watched a documentary about the old architecture of Jaipur.</li><li>User recently adopted a rabbit named Coco.</li><li>User was recommended the book &#x27;Project Hail Mary&#x27; as a good read for long flights.</li><li>User&#x27;s rabbit Coco chewed their headphones again, indicating a recurring behavior.</li><li>User is interested in learning how to cook and was advised to start by mastering 5 simple recipes through repetition.</li><li>User&#x27;s rabbit Coco chewed their headphones.</li><li>User is seeking tips for improving their sleep quality.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Plain recall</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">What did I name my rabbit?</div>
+  <div class="qans"><span>expected <b>Coco</b></span><span>got <b>Coco</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User has a rabbit named Coco.</li><li>User&#x27;s rabbit Coco chewed the user&#x27;s headphones.</li><li>User&#x27;s name is Harsha and they are based in Delhi, India.</li><li>User watched a cricket match highlight from Jaipur on November 19, 2026.</li><li>User watched a cricket match highlight from Bangalore.</li><li>User was recommended the book &#x27;Project Hail Mary&#x27; as a fun read for a long flight.</li><li>User works at Razorpay with the email address harsha@razorpay.com.</li><li>User relocated from Delhi to Pune, leaving Delhi last week (around November 12, 2026) and joining Flipkart on Monday (November 23, 2026).</li><li>User was advised to start learning to cook by mastering 5 simple recipes through repetition.</li><li>User is seeking advice on how to learn to cook.</li><li>User is planning to visit their sister Swathi in Mumbai next month (around December 2026).</li><li>User relocated from Delhi to Pune last week (around November 12, 2026) and is joining Flipkart on Monday (November 23, 2026).</li><li>User plans to visit their sister Swathi in Mumbai next month (around December 2026).</li><li>Assistant confirmed that the user&#x27;s old work email has been forgotten/deleted.</li><li>User is thinking of starting a morning running routine.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Plain recall</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">What&#x27;s my sister&#x27;s name?</div>
+  <div class="qans"><span>expected <b>Swathi</b></span><span>got <b>Swathi</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User is planning to visit their sister Swathi in Mumbai next month (around December 2026).</li><li>User plans to visit their sister Swathi in Mumbai next month (around December 2026).</li><li>User has a rabbit named Coco.</li><li>User&#x27;s name is Harsha and they are based in Delhi, India.</li><li>User watched a cricket match highlight from Jaipur on November 19, 2026.</li><li>User watched a cricket match highlight from Bangalore.</li><li>User works at Razorpay with the email address harsha@razorpay.com.</li><li>User was recommended the book &#x27;Project Hail Mary&#x27; as a fun read for a long flight.</li><li>User relocated from Delhi to Pune last week (around November 12, 2026) and is joining Flipkart on Monday (November 23, 2026).</li><li>User watched a documentary about Bangalore&#x27;s old architecture.</li><li>User relocated from Delhi to Pune, leaving Delhi last week (around November 12, 2026) and joining Flipkart on Monday (November 23, 2026).</li><li>User&#x27;s rabbit Coco chewed the user&#x27;s headphones.</li><li>User is seeking advice on how to learn to cook.</li><li>User was recommended a vegetable stir fry with rice as a fast and easy dinner option for 15-minute preparation.</li><li>Assistant confirmed that the user&#x27;s old work email has been forgotten/deleted.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="updated_fact" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Updated fact</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">Where am I based currently?</div>
+  <div class="qans"><span>expected <b>Pune</b></span><span>got <b>Pune</b></span><span>outdated value Delhi</span></div>
+  <details><summary>20 memories returned</summary><ul><li>User&#x27;s name is Harsha and they are based in Delhi, India.</li><li>User relocated from Delhi to Pune, leaving Delhi last week (around November 12, 2026) and joining Flipkart on Monday (November 23, 2026).</li><li>User moved from Delhi to Pune and started a new job at Flipkart.</li><li>User relocated from Delhi to Pune last week (around November 12, 2026) and is joining Flipkart on Monday (November 23, 2026).</li><li>User watched a cricket match highlight from Jaipur on November 19, 2026.</li><li>User works at Razorpay with the email address harsha@razorpay.com.</li><li>User watched a cricket match highlight from Bangalore.</li><li>User is planning to visit their sister Swathi in Mumbai next month (around December 2026).</li><li>User is seeking advice on how to learn to cook.</li><li>User is thinking of starting a morning running routine.</li><li>User plans to visit their sister Swathi in Mumbai next month (around December 2026).</li><li>User is considering starting a morning running routine.</li><li>User is seeking tips for sleeping better.</li><li>User watched a documentary about Bangalore&#x27;s old architecture.</li><li>User requested to delete their old work email address because it is no longer in use.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="previous_value" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Previous value</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">Where did I live before?</div>
+  <div class="qans"><span>expected <b>Delhi</b></span><span>got <b>Delhi</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User moved from Delhi to Pune and started a new job at Flipkart.</li><li>User relocated from Delhi to Pune, leaving Delhi last week (around November 12, 2026) and joining Flipkart on Monday (November 23, 2026).</li><li>User watched a documentary about Bangalore&#x27;s old architecture.</li><li>User relocated from Delhi to Pune last week (around November 12, 2026) and is joining Flipkart on Monday (November 23, 2026).</li><li>User&#x27;s name is Harsha and they are based in Delhi, India.</li><li>User watched a cricket match highlight from Jaipur on November 19, 2026.</li><li>User watched a cricket match highlight from Bangalore.</li><li>User is planning to visit their sister Swathi in Mumbai next month (around December 2026).</li><li>User requested to delete their old work email address because it is no longer in use.</li><li>User plans to visit their sister Swathi in Mumbai next month (around December 2026).</li><li>User is seeking advice on how to learn to cook.</li><li>User read an article about traffic in Kolkata and found the conditions to be awful.</li><li>User read an article about traffic in Kochi and found the conditions to be awful.</li><li>Assistant confirmed that the user&#x27;s old work email has been forgotten/deleted.</li><li>User was advised to maintain a fixed sleep schedule and avoid screens before bed to improve sleep.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="deleted_fact" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Deleted fact</span>
+    <span>user g001 · run 0</span><span class="verdict bad">stale value</span></div>
+  <div class="qtext">What&#x27;s my work email?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>harsha@razorpay.com</b></span><span>outdated value harsha@razorpay.com</span></div>
+  <details><summary>20 memories returned</summary><ul><li>Assistant confirmed that the user&#x27;s old work email has been forgotten/deleted.</li><li>User requested to delete their old work email address because it is no longer in use.</li><li>User works at Razorpay with the email address harsha@razorpay.com.</li><li>User requested to delete the work email harsha@razorpay.com because it is no longer valid, and the assistant confirmed removal.</li><li>User&#x27;s name is Harsha and they are based in Delhi, India.</li><li>User has a rabbit named Coco.</li><li>User moved from Delhi to Pune and started a new job at Flipkart.</li><li>User is thinking of starting a morning running routine.</li><li>User watched a cricket match highlight from Bangalore.</li><li>User watched a cricket match highlight from Jaipur on November 19, 2026.</li><li>User was recommended the book &#x27;Project Hail Mary&#x27; as a fun read for a long flight.</li><li>User is considering starting a morning running routine.</li><li>User is seeking advice on how to learn to cook.</li><li>User&#x27;s laptop is experiencing freezing issues and was advised to close background apps and check for updates.</li><li>User is seeking tips for sleeping better.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="never_mentioned" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Never mentioned</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">What&#x27;s my blood type?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User watched a cricket match highlight from Jaipur on November 19, 2026.</li><li>User is seeking advice on how to learn to cook.</li><li>User watched a cricket match highlight from Bangalore.</li><li>User&#x27;s name is Harsha and they are based in Delhi, India.</li><li>User has a rabbit named Coco.</li><li>User relocated from Delhi to Pune last week (around November 12, 2026) and is joining Flipkart on Monday (November 23, 2026).</li><li>User is planning to visit their sister Swathi in Mumbai next month (around December 2026).</li><li>User was advised to start learning to cook by mastering 5 simple recipes through repetition.</li><li>User is interested in learning how to cook and was advised to start by mastering 5 simple recipes through repetition.</li><li>User is seeking tips for improving their sleep quality.</li><li>User relocated from Delhi to Pune, leaving Delhi last week (around November 12, 2026) and joining Flipkart on Monday (November 23, 2026).</li><li>User plans to visit their sister Swathi in Mumbai next month (around December 2026).</li><li>User works at Razorpay with the email address harsha@razorpay.com.</li><li>User&#x27;s laptop is experiencing freezing issues and was advised to close background apps and check for updates.</li><li>User watched a documentary about Bangalore&#x27;s old architecture.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="other_person" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Someone else&#x27;s fact</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">Where does my sister live?</div>
+  <div class="qans"><span>expected <b>Mumbai</b></span><span>got <b>Mumbai</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User is planning to visit their sister Swathi in Mumbai next month (around December 2026).</li><li>User plans to visit their sister Swathi in Mumbai next month (around December 2026).</li><li>User&#x27;s name is Harsha and they are based in Delhi, India.</li><li>User relocated from Delhi to Pune, leaving Delhi last week (around November 12, 2026) and joining Flipkart on Monday (November 23, 2026).</li><li>User relocated from Delhi to Pune last week (around November 12, 2026) and is joining Flipkart on Monday (November 23, 2026).</li><li>User moved from Delhi to Pune and started a new job at Flipkart.</li><li>User has a rabbit named Coco.</li><li>User read an article about traffic in Kochi and found the conditions to be awful.</li><li>User watched a documentary about Bangalore&#x27;s old architecture.</li><li>User works at Razorpay with the email address harsha@razorpay.com.</li><li>User is seeking tips for sleeping better.</li><li>User watched a cricket match highlight from Bangalore.</li><li>User watched a cricket match highlight from Jaipur on November 19, 2026.</li><li>User read an article about traffic in Kolkata and found the conditions to be awful.</li><li>User is seeking advice on how to learn to cook.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Plain recall</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What is the name of my beagle?</div>
+  <div class="qans"><span>expected <b>Coco</b></span><span>got <b>Coco</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User is based in Mumbai and introduced their beagle named Coco.</li><li>User&#x27;s beagle Coco chewed the user&#x27;s headphones again, indicating a recurring behavior.</li><li>User&#x27;s beagle Coco chewed the user&#x27;s headphones.</li><li>User works at Swiggy and uses the email address siddharth@swiggy.com for work.</li><li>User is looking for advice on how to learn to cook, starting with mastering a few simple recipes.</li><li>User watched a cricket match highlight from Bangalore on November 19, 2026.</li><li>User watched a cricket match highlight from Kolkata on November 19, 2026.</li><li>User was advised to start learning to cook by practicing 5 simple recipes repeatedly.</li><li>It is raining heavily on November 19, 2026.</li><li>User is planning to visit their brother Suresh in Kolkata next month (around December 2026).</li><li>User was recommended the book &#x27;Project Hail Mary&#x27; for reading on a long flight.</li><li>User is seeking tips for improving their sleep quality.</li><li>User watched a documentary about the old architecture of Hyderabad.</li><li>User is experiencing issues with their laptop freezing and was advised to try closing background apps and checking for updates.</li><li>User relocated from Mumbai to Pune last week (around November 12, 2026) and started a new job at Infosys on Monday.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Plain recall</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What&#x27;s my brother&#x27;s name?</div>
+  <div class="qans"><span>expected <b>Suresh</b></span><span>got <b>Suresh</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User is planning to visit their brother Suresh in Kolkata next month (around December 2026).</li><li>User is based in Mumbai and introduced their beagle named Coco.</li><li>User works at Swiggy and uses the email address siddharth@swiggy.com for work.</li><li>User watched a cricket match highlight from Bangalore on November 19, 2026.</li><li>User watched a cricket match highlight from Kolkata on November 19, 2026.</li><li>User was recommended the book &#x27;Project Hail Mary&#x27; for reading on a long flight.</li><li>User&#x27;s beagle Coco chewed the user&#x27;s headphones.</li><li>It is raining heavily on November 19, 2026.</li><li>User is looking for advice on how to learn to cook, starting with mastering a few simple recipes.</li><li>User watched a documentary about the old architecture of Kochi.</li><li>User is now employed at Infosys in Pune, having previously worked at Swiggy.</li><li>User relocated from Mumbai to Pune last week (around November 12, 2026) and started a new job at Infosys on Monday.</li><li>User watched a documentary about the old architecture of Hyderabad.</li><li>User&#x27;s beagle Coco chewed the user&#x27;s headphones again, indicating a recurring behavior.</li><li>User watched a documentary about the old architecture of Pune.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="updated_fact" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Updated fact</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What city do I live in?</div>
+  <div class="qans"><span>expected <b>Pune</b></span><span>got <b>Pune</b></span><span>outdated value Mumbai</span></div>
+  <details><summary>20 memories returned</summary><ul><li>User relocated from Mumbai to Pune last week (around November 12, 2026) and started a new job at Infosys on Monday.</li><li>User is based in Mumbai and introduced their beagle named Coco.</li><li>User is planning to visit their brother Suresh in Kolkata next month (around December 2026).</li><li>It is raining heavily on November 19, 2026.</li><li>User works at Swiggy and uses the email address siddharth@swiggy.com for work.</li><li>User watched a cricket match highlight from Kolkata on November 19, 2026.</li><li>User watched a documentary about the old architecture of Hyderabad.</li><li>User watched a documentary about the old architecture of Pune.</li><li>User is now employed at Infosys in Pune, having previously worked at Swiggy.</li><li>User read an article about traffic conditions in Ahmedabad and found them to be awful.</li><li>User read an article about traffic conditions in Kolkata and found them to be awful.</li><li>User watched a documentary about the old architecture of Kochi.</li><li>User watched a cricket match highlight from Bangalore on November 19, 2026.</li><li>User read an article about traffic conditions in Pune and found them to be awful.</li><li>User read an article about traffic conditions in Delhi and found them to be awful.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="previous_value" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Previous value</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">Where did I live before?</div>
+  <div class="qans"><span>expected <b>Mumbai</b></span><span>got <b>Mumbai</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User relocated from Mumbai to Pune last week (around November 12, 2026) and started a new job at Infosys on Monday.</li><li>User watched a documentary about the old architecture of Hyderabad.</li><li>User watched a documentary about the old architecture of Kochi.</li><li>User watched a documentary about the old architecture of Pune.</li><li>User is based in Mumbai and introduced their beagle named Coco.</li><li>User watched a cricket match highlight from Kolkata on November 19, 2026.</li><li>User is now employed at Infosys in Pune, having previously worked at Swiggy.</li><li>User watched a cricket match highlight from Bangalore on November 19, 2026.</li><li>User is planning to visit their brother Suresh in Kolkata next month (around December 2026).</li><li>User read an article about traffic conditions in Kolkata and found them to be awful.</li><li>User read an article about traffic conditions in Ahmedabad and found them to be awful.</li><li>User is looking for advice on how to learn to cook, starting with mastering a few simple recipes.</li><li>User read an article about traffic conditions in Pune and found them to be awful.</li><li>It is raining heavily on November 19, 2026.</li><li>User read an article about traffic conditions in Delhi and found them to be awful.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="deleted_fact" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Deleted fact</span>
+    <span>user g002 · run 0</span><span class="verdict bad">stale value</span></div>
+  <div class="qtext">What&#x27;s my work email?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>siddharth@swiggy.com</b></span><span>outdated value siddharth@swiggy.com</span></div>
+  <details><summary>20 memories returned</summary><ul><li>User works at Swiggy and uses the email address siddharth@swiggy.com for work.</li><li>User is now employed at Infosys in Pune, having previously worked at Swiggy.</li><li>User relocated from Mumbai to Pune last week (around November 12, 2026) and started a new job at Infosys on Monday.</li><li>User was recommended the book &#x27;Project Hail Mary&#x27; for reading on a long flight.</li><li>User is based in Mumbai and introduced their beagle named Coco.</li><li>User watched a cricket match highlight from Bangalore on November 19, 2026.</li><li>User watched a cricket match highlight from Kolkata on November 19, 2026.</li><li>User is looking for advice on how to learn to cook, starting with mastering a few simple recipes.</li><li>User is experiencing issues with their laptop freezing and was advised to try closing background apps and checking for updates.</li><li>User&#x27;s beagle Coco chewed the user&#x27;s headphones.</li><li>User watched a documentary about the old architecture of Kochi.</li><li>User is seeking tips for improving their sleep quality.</li><li>User&#x27;s beagle Coco chewed the user&#x27;s headphones again, indicating a recurring behavior.</li><li>User watched a documentary about the old architecture of Pune.</li><li>It is raining heavily on November 19, 2026.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="never_mentioned" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Never mentioned</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What did I study in college?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User watched a documentary about the old architecture of Hyderabad.</li><li>User watched a documentary about the old architecture of Pune.</li><li>User watched a documentary about the old architecture of Kochi.</li><li>User watched a cricket match highlight from Kolkata on November 19, 2026.</li><li>User watched a cricket match highlight from Bangalore on November 19, 2026.</li><li>User is looking for advice on how to learn to cook, starting with mastering a few simple recipes.</li><li>User was advised to start learning to cook by practicing 5 simple recipes repeatedly.</li><li>User was recommended the book &#x27;Project Hail Mary&#x27; for reading on a long flight.</li><li>User&#x27;s beagle Coco chewed the user&#x27;s headphones.</li><li>User read an article about traffic conditions in Kolkata and found them to be awful.</li><li>User was advised to use slightly cooler water and a coarser grind to reduce bitterness in their coffee.</li><li>User read an article about traffic conditions in Delhi and found them to be awful.</li><li>User read an article about traffic conditions in Pune and found them to be awful.</li><li>It is raining heavily on November 19, 2026.</li><li>User read an article about traffic conditions in Ahmedabad and found them to be awful.</li></ul></details>
+</div><div class="qrow" data-sys="mem0" data-type="other_person" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c1" aria-hidden="true"></i>Mem0</span><span>Someone else&#x27;s fact</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">Which city does my brother live in?</div>
+  <div class="qans"><span>expected <b>Kolkata</b></span><span>got <b>Kolkata</b></span></div>
+  <details><summary>20 memories returned</summary><ul><li>User is planning to visit their brother Suresh in Kolkata next month (around December 2026).</li><li>User is based in Mumbai and introduced their beagle named Coco.</li><li>User relocated from Mumbai to Pune last week (around November 12, 2026) and started a new job at Infosys on Monday.</li><li>User read an article about traffic conditions in Ahmedabad and found them to be awful.</li><li>User read an article about traffic conditions in Kolkata and found them to be awful.</li><li>User watched a documentary about the old architecture of Hyderabad.</li><li>User watched a cricket match highlight from Kolkata on November 19, 2026.</li><li>User read an article about traffic conditions in Delhi and found them to be awful.</li><li>User watched a documentary about the old architecture of Pune.</li><li>User watched a documentary about the old architecture of Kochi.</li><li>It is raining heavily on November 19, 2026.</li><li>User read an article about traffic conditions in Pune and found them to be awful.</li><li>User is now employed at Infosys in Pune, having previously worked at Swiggy.</li><li>User works at Swiggy and uses the email address siddharth@swiggy.com for work.</li><li>User watched a cricket match highlight from Bangalore on November 19, 2026.</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="plain_recall" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Plain recall</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What did I name my rabbit?</div>
+  <div class="qans"><span>expected <b>Coco</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Plain recall</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What&#x27;s my cousin&#x27;s name?</div>
+  <div class="qans"><span>expected <b>Suresh</b></span><span>got <b>Suresh</b></span></div>
+  <details><summary>1 memories returned</summary><ul><li>user&#x27;s cousin is Suresh</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="updated_fact" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Updated fact</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What city do I live in?</div>
+  <div class="qans"><span>expected <b>Hyderabad</b></span><span>got <b>Hyderabad</b></span><span>outdated value Bangalore</span></div>
+  <details><summary>4 memories returned</summary><ul><li>Suresh lives in Pune (no longer true since 2026-01-04)</li><li>user lives in Hyderabad</li><li>user lived in Bangalore previously</li><li>user is in Bangalore (no longer true since 2026-01-03)</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="previous_value" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Previous value</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">Where did I live before?</div>
+  <div class="qans"><span>expected <b>Bangalore</b></span><span>got <b>Bangalore</b></span></div>
+  <details><summary>4 memories returned</summary><ul><li>user lived in Bangalore previously</li><li>Suresh lives in Pune (no longer true since 2026-01-04)</li><li>user lives in Hyderabad</li><li>user is in Bangalore (no longer true since 2026-01-03)</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="deleted_fact" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Deleted fact</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What&#x27;s my work email?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span><span>outdated value vikram@flipkart.com</span></div>
+  <details><summary>2 memories returned</summary><ul><li>user works at Flipkart (no longer true since 2026-01-04)</li><li>user works for Ola</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="never_mentioned" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Never mentioned</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">What&#x27;s my favorite football team?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="other_person" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Someone else&#x27;s fact</span>
+    <span>user g000 · run 0</span></div>
+  <div class="qtext">Which city does my cousin live in?</div>
+  <div class="qans"><span>expected <b>Pune</b></span><span>got <b>Pune</b></span></div>
+  <details><summary>5 memories returned</summary><ul><li>user&#x27;s cousin is Suresh</li><li>Suresh lives in Pune (no longer true since 2026-01-04)</li><li>user lives in Hyderabad</li><li>user lived in Bangalore previously</li><li>user is in Bangalore (no longer true since 2026-01-03)</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Plain recall</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">What did I name my rabbit?</div>
+  <div class="qans"><span>expected <b>Coco</b></span><span>got <b>Coco</b></span></div>
+  <details><summary>1 memories returned</summary><ul><li>user has a rabbit named Coco</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="plain_recall" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Plain recall</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">What&#x27;s my sister&#x27;s name?</div>
+  <div class="qans"><span>expected <b>Swathi</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="updated_fact" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Updated fact</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">Where am I based currently?</div>
+  <div class="qans"><span>expected <b>Pune</b></span><span>got <b>UNKNOWN</b></span><span>outdated value Delhi</span></div>
+  <details><summary>1 memories returned</summary><ul><li>user is based in Delhi (no longer true since 2026-01-04)</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="previous_value" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Previous value</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">Where did I live before?</div>
+  <div class="qans"><span>expected <b>Delhi</b></span><span>got <b>Delhi</b></span></div>
+  <details><summary>4 memories returned</summary><ul><li>user is based in Delhi (no longer true since 2026-01-04)</li><li>Swathi is located in Mumbai</li><li>user relocated to Pune</li><li>user left Delhi last week (no longer true since 2026-01-06)</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="deleted_fact" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Deleted fact</span>
+    <span>user g001 · run 0</span><span class="verdict bad">stale value</span></div>
+  <div class="qtext">What&#x27;s my work email?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>harsha@razorpay.com</b></span><span>outdated value harsha@razorpay.com</span></div>
+  <details><summary>3 memories returned</summary><ul><li>user has old work email that is no longer used</li><li>user works at Razorpay</li><li>user&#x27;s work email is harsha@razorpay.com</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="never_mentioned" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Never mentioned</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">What&#x27;s my blood type?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="other_person" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Someone else&#x27;s fact</span>
+    <span>user g001 · run 0</span></div>
+  <div class="qtext">Where does my sister live?</div>
+  <div class="qans"><span>expected <b>Mumbai</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="plain_recall" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Plain recall</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What is the name of my beagle?</div>
+  <div class="qans"><span>expected <b>Coco</b></span><span>got <b>Coco</b></span></div>
+  <details><summary>1 memories returned</summary><ul><li>user has a beagle named Coco</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="plain_recall" data-ok="0">
+  <div class="qhead"><span class="verdict bad">✗ fail</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Plain recall</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What&#x27;s my brother&#x27;s name?</div>
+  <div class="qans"><span>expected <b>Suresh</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="updated_fact" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Updated fact</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What city do I live in?</div>
+  <div class="qans"><span>expected <b>Pune</b></span><span>got <b>Pune</b></span><span>outdated value Mumbai</span></div>
+  <details><summary>4 memories returned</summary><ul><li>user lives in Mumbai (no longer true since 2026-01-04)</li><li>Suresh lives in Kolkata</li><li>user relocated to Pune</li><li>user left Mumbai last week (no longer true since 2026-01-01)</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="previous_value" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Previous value</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">Where did I live before?</div>
+  <div class="qans"><span>expected <b>Mumbai</b></span><span>got <b>Mumbai</b></span></div>
+  <details><summary>4 memories returned</summary><ul><li>user lives in Mumbai (no longer true since 2026-01-04)</li><li>Suresh lives in Kolkata</li><li>user relocated to Pune</li><li>user left Mumbai last week (no longer true since 2026-01-01)</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="deleted_fact" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Deleted fact</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What&#x27;s my work email?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span><span>outdated value siddharth@swiggy.com</span></div>
+  <details><summary>3 memories returned</summary><ul><li>user has old work email that is no longer used</li><li>user works at Swiggy</li><li>user joining Infosys on Monday</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="never_mentioned" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Never mentioned</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">What did I study in college?</div>
+  <div class="qans"><span>expected <b>UNKNOWN</b></span><span>got <b>UNKNOWN</b></span></div>
+  <details><summary>0 memories returned</summary><ul><li>(nothing returned)</li></ul></details>
+</div><div class="qrow" data-sys="zep" data-type="other_person" data-ok="1">
+  <div class="qhead"><span class="verdict ok">✓ pass</span>
+    <span><i class="sw c2" aria-hidden="true"></i>Zep (Graphiti)</span><span>Someone else&#x27;s fact</span>
+    <span>user g002 · run 0</span></div>
+  <div class="qtext">Which city does my brother live in?</div>
+  <div class="qans"><span>expected <b>Kolkata</b></span><span>got <b>Kolkata</b></span></div>
+  <details><summary>4 memories returned</summary><ul><li>user lives in Mumbai (no longer true since 2026-01-04)</li><li>Suresh lives in Kolkata</li><li>user relocated to Pune</li><li>user left Mumbai last week (no longer true since 2026-01-01)</li></ul></details>
+</div></div>
+</section>
+
+<footer><span>source: 20261120-043741.jsonl</span><span>CC-BY-4.0</span></footer>
+
+</div>
+<div id="tip" role="tooltip"></div>
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var root = document.documentElement;
+
+  // Theme: flip between light and dark, starting from what is shown now.
+  $("#themeBtn").addEventListener("click", function () {
+    var nowDark = getComputedStyle(root).colorScheme.indexOf("dark") !== -1;
+    var next = nowDark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("mb-theme", next); } catch (e) {}
+  });
+
+  // Charts / Table switch.
+  document.querySelectorAll(".seg button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll(".seg button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      $("#view-charts").hidden = b.dataset.view !== "charts";
+      $("#view-table").hidden = b.dataset.view !== "table";
+    });
+  });
+
+  // Answer filters. With no script, every row stays visible.
+  var rows = document.querySelectorAll(".qrow");
+  function filter() {
+    var s = $("#fSys").value, t = $("#fType").value, o = $("#fOut").value, n = 0;
+    rows.forEach(function (r) {
+      var show = (!s || r.dataset.sys === s) && (!t || r.dataset.type === t) && (o === "all" || r.dataset.ok === o);
+      r.hidden = !show; if (show) n++;
+    });
+    $("#fCount").textContent = n + (n === 1 ? " row" : " rows");
+  }
+  ["#fSys", "#fType", "#fOut"].forEach(function (id) { $(id).addEventListener("change", filter); });
+  $("#fOut").value = "0"; filter();
+
+  // Tooltips.
+  var tip = $("#tip");
+  document.addEventListener("mousemove", function (e) {
+    var t = e.target.closest && e.target.closest("[data-tip]");
+    if (!t) { tip.style.opacity = 0; return; }
+    tip.textContent = t.dataset.tip; tip.style.opacity = 1;
+    tip.style.left = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8) + "px";
+    tip.style.top = (e.clientY + 16) + "px";
+  });
+})();
+</script>
+</body>
+</html>
