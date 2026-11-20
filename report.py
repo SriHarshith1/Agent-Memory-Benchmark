@@ -323,7 +323,7 @@ def build_body(rows, files):
     <div class="seg" role="group" aria-label="View"><button type="button" data-view="charts" aria-pressed="true">CHARTS</button><button type="button" data-view="table" aria-pressed="false">TABLE</button></div></div>
   {charts(systems, n_q)}
   {table(systems)}
-  <div class="boxed"><span class="tag2">OPEN CODE</span><span>Data generator, harness, adapters and scorer: <code>generate.py</code>, <code>eval.py</code>, <code>memory.py</code>, <code>report.py</code>.</span></div>
+  <div class="boxed"><span class="tag2">OPEN CODE</span><span>The data generator, adapters, agent and scorer are on GitHub: <a href="https://github.com/SriHarshith1/Agent-Memory-Benchmark">SriHarshith1/Agent-Memory-Benchmark</a>. Every row on this page is in the repo, so you can check each score.</span></div>
   <details class="acc"><summary><span>[01.a]</span> methodology and metric definitions</summary><div>
     <h3>How the board is built</h3>
     <ol>
