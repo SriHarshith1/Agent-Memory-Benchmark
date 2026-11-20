@@ -22,17 +22,18 @@ Each synthetic user has about 20 chat sessions. A few sessions contain facts and
 | System | Accuracy | Precision | Recall | Deleted fact | Ingest / session |
 |---|---|---|---|---|---|
 | Full history (baseline) | 0.86 | 0.83 | 1.00 | 0/3 | — |
-| Mem0 | 0.81 | 0.78 | 0.93 | 0/3 | 5.6 s |
-| Zep (Graphiti) | 0.71 | 0.91 | 0.67 | 2/3 | 23 s |
+| Mem0 | 0.86 | 0.83 | 1.00 | 0/3 | 9.2 s |
+| Zep (Graphiti) | 0.76 | 1.00 | 0.67 | 3/3 | 29 s |
 | No memory (baseline) | 0.29 | 0.00 | 0.00 | 3/3 | — |
 
-- **Forgetting:** after the user asks to forget an email, Mem0 still returns it for all 3 users. Graphiti marks the old fact as invalid in 2 of 3.
-- **Recall:** Mem0 recalls more. Graphiti stores the facts, but its search returns nothing for some questions whose wording differs from the stored fact.
-- **Speed:** Mem0 ingests about 4× faster on this setup.
+- **Forgetting:** after the user asks to forget an email, Mem0 still returns it for all 3 users. Graphiti marks the old fact as invalid and never returns it.
+- **Recall:** Mem0 recalls every fact. Graphiti stores the facts, but its search returns nothing for 4 of 15 answerable questions, often when the question's wording differs from the stored fact.
+- **Precision:** Zep never gives a wrong value. When it fails, it says `UNKNOWN`.
+- **Speed:** Mem0 ingests about 3× faster on this setup.
 
-The sample is small. One question moves accuracy by about 5 points. A larger run with repeats will replace these numbers.
+The sample is small. One question moves accuracy by about 5 points. Two runs on the same users differ by one or two answers per system (Mem0 updated fact 2/3 → 3/3, Zep deleted fact 2/3 → 3/3). A larger run with repeats will replace these numbers.
 
-The full report, with every question, reply and retrieved memory, is live at **https://sriharshith1.github.io/Agent-Memory-Benchmark/** (source: [`site/index.html`](site/index.html)). The raw rows are in [`results/20261120-043741.jsonl`](results/20261120-043741.jsonl).
+The full report, with every question, reply and retrieved memory, is live at **https://sriharshith1.github.io/Agent-Memory-Benchmark/** (source: [`site/index.html`](site/index.html)). The raw rows are in [`results/20261120-181403.jsonl`](results/20261120-181403.jsonl). The earlier run is in [`results/20261120-043741.jsonl`](results/20261120-043741.jsonl).
 
 ## Setup
 

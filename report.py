@@ -129,9 +129,13 @@ def hero(systems, meta):
         other = [p for p in parts if p.startswith("has ")]
         clauses = ([f"leads {' and '.join(leads)}"] if leads else []) + other
         lead.append(f"{escape(name)} {' and '.join(clauses)}.")
-    leaked = [s["name"] for s in vendors if (deleted_acc(s) or 0) < 1]
-    if leaked:
-        lead.append(f"{' and '.join(map(escape, leaked))} still return a deleted fact for some users.")
+    # Say how often each vendor leaked a deleted fact: "for every user" / "for some users".
+    for when, test in (("every", lambda a: a == 0), ("some", lambda a: 0 < a < 1)):
+        leaked = [s["name"] for s in vendors if deleted_acc(s) is not None and test(deleted_acc(s))]
+        if leaked:
+            verb = "returns" if len(leaked) == 1 else "return"
+            lead.append(f"{' and '.join(map(escape, leaked))} still {verb} a deleted fact for {when} user"
+                        f"{'' if when == 'every' else 's'}.")
     lead.append(f"Independent benchmark of long-term memory for AI agents, on {meta['n_users']} synthetic users and "
                 f"{meta['n_questions']} questions per system. Open source. Last measured {meta['date']}.")
 

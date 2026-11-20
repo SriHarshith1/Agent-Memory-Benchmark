@@ -62,7 +62,7 @@ def score(rows: list[dict]) -> dict:
     }
 
 
-def run_system(name: str, users: list[dict], run: int) -> list[dict]:
+def run_system(name: str, users: list[dict], run: int, out_file=None) -> list[dict]:
     system = make_system(name)
     rows = []
     for user in users:
@@ -93,6 +93,9 @@ def run_system(name: str, users: list[dict], run: int) -> list[dict]:
                 "ingest_s_per_session": round(ingest_s, 3),
                 "retrieve_ms": round(retrieve_ms, 1),
             })
+            if out_file:  # write each row now, so a crash late in a long run keeps the earlier rows
+                out_file.write(json.dumps(rows[-1]) + "\n")
+                out_file.flush()
             mark = "✓" if rows[-1]["correct"] else "✗"
             print(f"  {mark} [{name}] {q['type']:<16} expected={q['answer']!r:<14} got={reply!r}")
     return rows
@@ -126,18 +129,16 @@ def main():
     users = [json.load(open(path)) for path in paths]
     print(f"{len(users)} users, {sum(len(u['questions']) for u in users)} questions, systems={args.systems}")
 
-    all_rows = []
-    for name in args.systems:
-        for run in range(args.runs):
-            print(f"\n== {name} (run {run}) ==")
-            all_rows += run_system(name, users, run)
-
-    # Save every row, so you can check each answer later.
+    # Save every row as it comes, so you can check each answer later (and keep partial runs).
     os.makedirs("results", exist_ok=True)
     out = f"results/{time.strftime('%Y%m%d-%H%M%S')}.jsonl"
+    print(f"Writing rows to {out}")
+    all_rows = []
     with open(out, "w") as f:
-        for r in all_rows:
-            f.write(json.dumps(r) + "\n")
+        for name in args.systems:
+            for run in range(args.runs):
+                print(f"\n== {name} (run {run}) ==")
+                all_rows += run_system(name, users, run, out_file=f)
 
     by_system = defaultdict(list)
     by_type = defaultdict(list)
