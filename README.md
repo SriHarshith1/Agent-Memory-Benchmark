@@ -32,7 +32,7 @@ Each synthetic user has about 20 chat sessions. A few sessions contain facts and
 
 The sample is small. One question moves accuracy by about 5 points. A larger run with repeats will replace these numbers.
 
-The full report, with every question, reply and retrieved memory, is in [`site/index.html`](site/index.html). The raw rows are in [`results/20261120-043741.jsonl`](results/20261120-043741.jsonl).
+The full report, with every question, reply and retrieved memory, is live at **https://sriharshith1.github.io/Agent-Memory-Benchmark/** (source: [`site/index.html`](site/index.html)). The raw rows are in [`results/20261120-043741.jsonl`](results/20261120-043741.jsonl).
 
 ## Setup
 
